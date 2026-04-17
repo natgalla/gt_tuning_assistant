@@ -1,0 +1,143 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Car {
+  id           Int     @id
+  name         String
+  manufacturer String
+  year         Int?
+  drivetrain   String
+
+  tunes       Tune[]
+  tuneConfigs TuneConfig[]
+}
+
+enum SuspensionType {
+  STOCK
+  STREET
+  SPORT
+  HEIGHT_ADJUSTABLE_SPORT
+  FULLY_CUSTOMIZABLE
+}
+
+enum TireType {
+  COMFORT_HARD
+  COMFORT_MEDIUM
+  COMFORT_SOFT
+  SPORT_HARD
+  SPORT_MEDIUM
+  SPORT_SOFT
+  RACING_HARD
+  RACING_MEDIUM
+  RACING_SOFT
+  INTERMEDIATE
+  WET
+  DIRT
+  SNOW
+}
+
+model TuneConfig {
+  id             Int            @id @default(autoincrement())
+  carId          Int
+  car            Car            @relation(fields: [carId], references: [id])
+  suspensionType SuspensionType
+  tireType       TireType
+
+  // Min/max for each parameter (null = not adjustable for this tier)
+  weightMin           Int?
+  weightMax           Int?
+  bodyHeightFrontMin  Float?
+  bodyHeightFrontMax  Float?
+  bodyHeightRearMin   Float?
+  bodyHeightRearMax   Float?
+  natFreqFrontMin     Float?
+  natFreqFrontMax     Float?
+  natFreqRearMin      Float?
+  natFreqRearMax      Float?
+  antiRollFrontMin    Int?
+  antiRollFrontMax    Int?
+  antiRollRearMin     Int?
+  antiRollRearMax     Int?
+  compressionFrontMin Int?
+  compressionFrontMax Int?
+  compressionRearMin  Int?
+  compressionRearMax  Int?
+  expansionFrontMin   Int?
+  expansionFrontMax   Int?
+  expansionRearMin    Int?
+  expansionRearMax    Int?
+  camberFrontMin      Float?
+  camberFrontMax      Float?
+  camberRearMin       Float?
+  camberRearMax       Float?
+  toeFrontMin         Float?
+  toeFrontMax         Float?
+  toeRearMin          Float?
+  toeRearMax          Float?
+
+  // Default/stock values
+  weightDefault           Int?
+  horsePowerDefault       Int?
+  bodyHeightFrontDefault  Float?
+  bodyHeightRearDefault   Float?
+  natFreqFrontDefault     Float?
+  natFreqRearDefault      Float?
+  antiRollFrontDefault    Int?
+  antiRollRearDefault     Int?
+  compressionFrontDefault Int?
+  compressionRearDefault  Int?
+  expansionFrontDefault   Int?
+  expansionRearDefault    Int?
+  camberFrontDefault      Float?
+  camberRearDefault       Float?
+  toeFrontDefault         Float?
+  toeRearDefault          Float?
+  lsdInitFrontDefault     Int?
+  lsdAccelFrontDefault    Int?
+  lsdDecelFrontDefault    Int?
+  lsdInitRearDefault      Int?
+  lsdAccelRearDefault     Int?
+  lsdDecelRearDefault     Int?
+
+  @@unique([carId, suspensionType])
+}
+
+model Tune {
+  id             String         @id @default(cuid())
+  name           String
+  carId          Int
+  car            Car            @relation(fields: [carId], references: [id])
+  suspensionType SuspensionType
+  tireType       TireType
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  weight           Int?
+  horsePower       Int?
+  bodyHeightFront  Float?
+  bodyHeightRear   Float?
+  natFreqFront     Float?
+  natFreqRear      Float?
+  antiRollFront    Int?
+  antiRollRear     Int?
+  compressionFront Int?
+  compressionRear  Int?
+  expansionFront   Int?
+  expansionRear    Int?
+  camberFront      Float?
+  camberRear       Float?
+  toeFront         Float?
+  toeRear          Float?
+  lsdInitFront     Int?
+  lsdAccelFront    Int?
+  lsdDecelFront    Int?
+  lsdInitRear      Int?
+  lsdAccelRear     Int?
+  lsdDecelRear     Int?
+}
