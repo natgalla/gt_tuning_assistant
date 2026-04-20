@@ -5,6 +5,7 @@ import { SuspensionSelector } from "@/components/selector";
 import { ParameterGroup } from "@/components/parameter-group";
 import { ParameterSlider, StepperRow } from "@/components/parameter-slider";
 import { SavedTunesSheet } from "@/components/saved-tunes-sheet";
+import { TuningAdvisor } from "@/components/tuning-advisor";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -163,12 +164,34 @@ export function TuneEditor({
   const [values, setValues] = useState<TuneValues>(getDefaults(currentConfig));
   const [savedTunes, setSavedTunes] = useState<SavedTune[]>(initialSavedTunes);
   const [saving, setSaving] = useState(false);
+  const [highlights, setHighlights] = useState<
+    Record<string, "increase" | "decrease">
+  >({});
+
+  const handleRecommendations = useCallback(
+    (h: Record<string, "increase" | "decrease">) => setHighlights(h),
+    [],
+  );
+  const handleDismissRecommendations = useCallback(
+    () => setHighlights({}),
+    [],
+  );
+  const clearHighlight = useCallback(
+    (param: string) =>
+      setHighlights((prev) => {
+        const next = { ...prev };
+        delete next[param];
+        return next;
+      }),
+    [],
+  );
 
   const handleSuspensionChange = useCallback(
     (type: string | null) => {
       if (!type) return;
       setSuspensionType(type);
       setValues(getDefaults(configMap[type]));
+      setHighlights({});
     },
     [configMap],
   );
@@ -179,6 +202,7 @@ export function TuneEditor({
 
   const resetToDefaults = useCallback(() => {
     setValues(getDefaults(currentConfig));
+    setHighlights({});
   }, [currentConfig]);
 
   const isAdjustable = (minField: keyof TuneConfig) => {
@@ -351,6 +375,10 @@ export function TuneEditor({
             disabled={!isAdjustable("bodyHeightFrontMin")}
             onFrontChange={(v) => updateValue("bodyHeightFront", v)}
             onRearChange={(v) => updateValue("bodyHeightRear", v)}
+            frontHighlight={highlights.bodyHeightFront}
+            rearHighlight={highlights.bodyHeightRear}
+            onFrontHighlightClear={() => clearHighlight("bodyHeightFront")}
+            onRearHighlightClear={() => clearHighlight("bodyHeightRear")}
           />
         </ParameterGroup>
 
@@ -372,6 +400,10 @@ export function TuneEditor({
             formatValue={(v) => v.toFixed(2)}
             onFrontChange={(v) => updateValue("natFreqFront", v)}
             onRearChange={(v) => updateValue("natFreqRear", v)}
+            frontHighlight={highlights.natFreqFront}
+            rearHighlight={highlights.natFreqRear}
+            onFrontHighlightClear={() => clearHighlight("natFreqFront")}
+            onRearHighlightClear={() => clearHighlight("natFreqRear")}
           />
         </ParameterGroup>
 
@@ -392,6 +424,10 @@ export function TuneEditor({
             disabled={!isAdjustable("antiRollFrontMin")}
             onFrontChange={(v) => updateValue("antiRollFront", v)}
             onRearChange={(v) => updateValue("antiRollRear", v)}
+            frontHighlight={highlights.antiRollFront}
+            rearHighlight={highlights.antiRollRear}
+            onFrontHighlightClear={() => clearHighlight("antiRollFront")}
+            onRearHighlightClear={() => clearHighlight("antiRollRear")}
           />
         </ParameterGroup>
 
@@ -416,6 +452,10 @@ export function TuneEditor({
             disabled={!isAdjustable("compressionFrontMin")}
             onFrontChange={(v) => updateValue("compressionFront", v)}
             onRearChange={(v) => updateValue("compressionRear", v)}
+            frontHighlight={highlights.compressionFront}
+            rearHighlight={highlights.compressionRear}
+            onFrontHighlightClear={() => clearHighlight("compressionFront")}
+            onRearHighlightClear={() => clearHighlight("compressionRear")}
           />
         </ParameterGroup>
 
@@ -436,6 +476,10 @@ export function TuneEditor({
             disabled={!isAdjustable("expansionFrontMin")}
             onFrontChange={(v) => updateValue("expansionFront", v)}
             onRearChange={(v) => updateValue("expansionRear", v)}
+            frontHighlight={highlights.expansionFront}
+            rearHighlight={highlights.expansionRear}
+            onFrontHighlightClear={() => clearHighlight("expansionFront")}
+            onRearHighlightClear={() => clearHighlight("expansionRear")}
           />
         </ParameterGroup>
 
@@ -457,6 +501,10 @@ export function TuneEditor({
             formatValue={(v) => `-${v.toFixed(1)}`}
             onFrontChange={(v) => updateValue("camberFront", v)}
             onRearChange={(v) => updateValue("camberRear", v)}
+            frontHighlight={highlights.camberFront}
+            rearHighlight={highlights.camberRear}
+            onFrontHighlightClear={() => clearHighlight("camberFront")}
+            onRearHighlightClear={() => clearHighlight("camberRear")}
           />
         </ParameterGroup>
 
@@ -474,6 +522,10 @@ export function TuneEditor({
             formatValue={(v) => (v >= 0 ? `+${v.toFixed(2)}` : v.toFixed(2))}
             onFrontChange={(v) => updateValue("toeFront", v)}
             onRearChange={(v) => updateValue("toeRear", v)}
+            frontHighlight={highlights.toeFront}
+            rearHighlight={highlights.toeRear}
+            onFrontHighlightClear={() => clearHighlight("toeFront")}
+            onRearHighlightClear={() => clearHighlight("toeRear")}
           />
         </ParameterGroup>
 
@@ -493,6 +545,8 @@ export function TuneEditor({
                   disabled={false}
                   formatValue={(v) => `${v}`}
                   onChange={(v) => updateValue("lsdInitFront", v)}
+                  highlight={highlights.lsdInitFront}
+                  onHighlightClear={() => clearHighlight("lsdInitFront")}
                 />
                 <StepperRow
                   label="Accel"
@@ -504,6 +558,8 @@ export function TuneEditor({
                   disabled={false}
                   formatValue={(v) => `${v}`}
                   onChange={(v) => updateValue("lsdAccelFront", v)}
+                  highlight={highlights.lsdAccelFront}
+                  onHighlightClear={() => clearHighlight("lsdAccelFront")}
                 />
                 <StepperRow
                   label="Decel"
@@ -515,6 +571,8 @@ export function TuneEditor({
                   disabled={false}
                   formatValue={(v) => `${v}`}
                   onChange={(v) => updateValue("lsdDecelFront", v)}
+                  highlight={highlights.lsdDecelFront}
+                  onHighlightClear={() => clearHighlight("lsdDecelFront")}
                 />
               </div>
             )}
@@ -531,6 +589,8 @@ export function TuneEditor({
                   disabled={false}
                   formatValue={(v) => `${v}`}
                   onChange={(v) => updateValue("lsdInitRear", v)}
+                  highlight={highlights.lsdInitRear}
+                  onHighlightClear={() => clearHighlight("lsdInitRear")}
                 />
                 <StepperRow
                   label="Accel"
@@ -542,6 +602,8 @@ export function TuneEditor({
                   disabled={false}
                   formatValue={(v) => `${v}`}
                   onChange={(v) => updateValue("lsdAccelRear", v)}
+                  highlight={highlights.lsdAccelRear}
+                  onHighlightClear={() => clearHighlight("lsdAccelRear")}
                 />
                 <StepperRow
                   label="Decel"
@@ -553,6 +615,8 @@ export function TuneEditor({
                   disabled={false}
                   formatValue={(v) => `${v}`}
                   onChange={(v) => updateValue("lsdDecelRear", v)}
+                  highlight={highlights.lsdDecelRear}
+                  onHighlightClear={() => clearHighlight("lsdDecelRear")}
                 />
               </div>
             )}
@@ -561,7 +625,7 @@ export function TuneEditor({
       </div>
 
       {/* Action Buttons */}
-      <div className="flex gap-2 mt-6 pb-8">
+      <div className="flex gap-2 mt-6">
         <Button onClick={saveTune} disabled={saving} className="flex-1">
           {saving ? "Saving..." : "Save Tune"}
         </Button>
@@ -574,6 +638,15 @@ export function TuneEditor({
           Reset
         </Button>
       </div>
+
+      {/* Bottom padding for fixed advisor bar */}
+      <div className="pb-24" />
+
+      {/* Tuning Advisor */}
+      <TuningAdvisor
+        onRecommendations={handleRecommendations}
+        onDismiss={handleDismissRecommendations}
+      />
     </div>
   );
 }

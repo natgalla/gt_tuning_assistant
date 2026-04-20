@@ -3,6 +3,7 @@
 import { useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Minus, Plus } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface ParameterSliderProps {
   label: string;
@@ -16,6 +17,10 @@ interface ParameterSliderProps {
   formatValue?: (value: number) => string;
   onFrontChange: (value: number) => void;
   onRearChange: (value: number) => void;
+  frontHighlight?: "increase" | "decrease";
+  rearHighlight?: "increase" | "decrease";
+  onFrontHighlightClear?: () => void;
+  onRearHighlightClear?: () => void;
 }
 
 function roundToStep(value: number, step: number): number {
@@ -33,6 +38,8 @@ export function StepperRow({
   disabled,
   formatValue,
   onChange,
+  highlight,
+  onHighlightClear,
 }: {
   label: string;
   value: number;
@@ -43,16 +50,20 @@ export function StepperRow({
   disabled: boolean;
   formatValue: (v: number) => string;
   onChange: (v: number) => void;
+  highlight?: "increase" | "decrease";
+  onHighlightClear?: () => void;
 }) {
   const decrement = useCallback(() => {
     const next = roundToStep(value - step, step);
     if (next >= min) onChange(next);
-  }, [value, step, min, onChange]);
+    if (highlight === "decrease" && onHighlightClear) onHighlightClear();
+  }, [value, step, min, onChange, highlight, onHighlightClear]);
 
   const increment = useCallback(() => {
     const next = roundToStep(value + step, step);
     if (next <= max) onChange(next);
-  }, [value, step, max, onChange]);
+    if (highlight === "increase" && onHighlightClear) onHighlightClear();
+  }, [value, step, max, onChange, highlight, onHighlightClear]);
 
   return (
     <div className="flex items-center gap-2">
@@ -62,7 +73,11 @@ export function StepperRow({
       <Button
         variant="outline"
         size="icon"
-        className="h-9 w-9 shrink-0"
+        className={cn(
+          "h-9 w-9 shrink-0",
+          highlight === "decrease" &&
+            "border-red-500 bg-red-500/10 text-red-600",
+        )}
         disabled={disabled || value <= min}
         onClick={decrement}
       >
@@ -75,7 +90,11 @@ export function StepperRow({
       <Button
         variant="outline"
         size="icon"
-        className="h-9 w-9 shrink-0"
+        className={cn(
+          "h-9 w-9 shrink-0",
+          highlight === "increase" &&
+            "border-green-500 bg-green-500/10 text-green-600",
+        )}
         disabled={disabled || value >= max}
         onClick={increment}
       >
@@ -97,6 +116,10 @@ export function ParameterSlider({
   formatValue,
   onFrontChange,
   onRearChange,
+  frontHighlight,
+  rearHighlight,
+  onFrontHighlightClear,
+  onRearHighlightClear,
 }: ParameterSliderProps) {
   const fmt = formatValue ?? ((v: number) => `${v}`);
 
@@ -117,6 +140,8 @@ export function ParameterSlider({
         disabled={disabled}
         formatValue={fmt}
         onChange={onFrontChange}
+        highlight={frontHighlight}
+        onHighlightClear={onFrontHighlightClear}
       />
       <StepperRow
         label="Rear"
@@ -128,6 +153,8 @@ export function ParameterSlider({
         disabled={disabled}
         formatValue={fmt}
         onChange={onRearChange}
+        highlight={rearHighlight}
+        onHighlightClear={onRearHighlightClear}
       />
     </div>
   );
