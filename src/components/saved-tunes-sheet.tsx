@@ -24,15 +24,16 @@ interface SavedTunesSheetProps {
   tunes: SavedTune[];
   onLoad: (tune: SavedTune) => void;
   onDelete: (tuneId: string) => void;
+  disabled?: boolean;
 }
 
-export function SavedTunesSheet({ tunes, onLoad, onDelete }: SavedTunesSheetProps) {
+export function SavedTunesSheet({ tunes, onLoad, onDelete, disabled }: SavedTunesSheetProps) {
   const [open, setOpen] = useState(false);
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger
-        render={<Button variant="outline" />}
+        render={<Button variant="outline" disabled={disabled} />}
       >
         Load{tunes.length > 0 && ` (${tunes.length})`}
       </SheetTrigger>

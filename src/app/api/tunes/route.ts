@@ -1,10 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   const carId = request.nextUrl.searchParams.get("carId");
+  const user = await getCurrentUser();
 
-  const where = carId ? { carId: parseInt(carId, 10) } : {};
+  const where: Record<string, unknown> = {};
+  if (carId) {
+    where.carId = parseInt(carId, 10);
+  } else if (user) {
+    where.userId = user.id;
+  }
+
   const tunes = await prisma.tune.findMany({
     where,
     orderBy: { createdAt: "desc" },
@@ -14,12 +22,21 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const user = await getCurrentUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const body = await request.json();
 
   const tune = await prisma.tune.create({
     data: {
       name: body.name,
-      carId: body.carId,
+      carId: body.carId ?? null,
+      carName: body.carName ?? null,
+      userId: user.id,
+      track: body.track ?? null,
+      bestLap: body.bestLap ?? null,
       suspensionType: body.suspensionType,
       tireType: body.tireType,
       weight: body.weight,

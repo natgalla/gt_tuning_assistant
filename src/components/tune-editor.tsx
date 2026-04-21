@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { SuspensionSelector } from "@/components/selector";
 import { ParameterGroup } from "@/components/parameter-group";
 import { ParameterSlider, StepperRow } from "@/components/parameter-slider";
@@ -9,7 +9,16 @@ import { TuningAdvisor } from "@/components/tuning-advisor";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { SUSPENSION_ORDER, TIRE_ORDER } from "@/lib/utils";
+import { useAuth } from "@/lib/auth-context";
+import { GT7_TRACKS } from "@/lib/tracks";
 
 interface TuneConfig {
   id: number;
@@ -109,6 +118,9 @@ export interface SavedTune extends TuneValues {
   tireType: string;
   suspensionType: string;
   createdAt: string;
+  carName?: string | null;
+  track?: string | null;
+  bestLap?: string | null;
 }
 
 function getDefaults(config: TuneConfig): TuneValues {
@@ -138,8 +150,71 @@ function getDefaults(config: TuneConfig): TuneValues {
   };
 }
 
+const FREEHAND_DEFAULTS: TuneValues = {
+  weight: null,
+  horsePower: null,
+  bodyHeightFront: 100,
+  bodyHeightRear: 100,
+  natFreqFront: 2.0,
+  natFreqRear: 2.0,
+  antiRollFront: 5,
+  antiRollRear: 3,
+  compressionFront: 30,
+  compressionRear: 30,
+  expansionFront: 40,
+  expansionRear: 40,
+  camberFront: 0,
+  camberRear: 0,
+  toeFront: 0,
+  toeRear: 0,
+  lsdInitFront: 10,
+  lsdAccelFront: 20,
+  lsdDecelFront: 15,
+  lsdInitRear: 10,
+  lsdAccelRear: 20,
+  lsdDecelRear: 15,
+};
+
+const FREEHAND_RANGES = {
+  bodyHeightFrontMin: 60,
+  bodyHeightFrontMax: 200,
+  bodyHeightRearMin: 60,
+  bodyHeightRearMax: 200,
+  natFreqFrontMin: 0.5,
+  natFreqFrontMax: 6.0,
+  natFreqRearMin: 0.5,
+  natFreqRearMax: 6.0,
+  antiRollFrontMin: 1,
+  antiRollFrontMax: 10,
+  antiRollRearMin: 1,
+  antiRollRearMax: 10,
+  compressionFrontMin: 0,
+  compressionFrontMax: 60,
+  compressionRearMin: 0,
+  compressionRearMax: 60,
+  expansionFrontMin: 0,
+  expansionFrontMax: 60,
+  expansionRearMin: 0,
+  expansionRearMax: 60,
+  camberFrontMin: 0,
+  camberFrontMax: 5.0,
+  camberRearMin: 0,
+  camberRearMax: 5.0,
+  toeFrontMin: -1.0,
+  toeFrontMax: 1.0,
+  toeRearMin: -1.0,
+  toeRearMax: 1.0,
+};
+
+const DRIVETRAIN_OPTIONS = ["FF", "FR", "MR", "RR", "4WD"];
+
+// Build flat track list for selector
+const TRACK_LIST = GT7_TRACKS.flatMap((v) =>
+  v.layouts.map((l) => (v.layouts.length === 1 ? v.venue : `${v.venue} - ${l}`)),
+);
+
 interface TuneEditorProps {
-  car: Car;
+  car: Car | null;
   configs: TuneConfig[];
   savedTunes: SavedTune[];
 }
@@ -149,24 +224,52 @@ export function TuneEditor({
   configs,
   savedTunes: initialSavedTunes,
 }: TuneEditorProps) {
+  const { user } = useAuth();
+  const isFreehand = car === null;
+
   const configMap = Object.fromEntries(
     configs.map((c) => [c.suspensionType, c]),
   );
   const availableTypes = configs.map((c) => c.suspensionType);
 
   const [suspensionType, setSuspensionType] = useState(
-    availableTypes.includes("FULLY_CUSTOMIZABLE")
+    isFreehand
       ? "FULLY_CUSTOMIZABLE"
-      : availableTypes[0],
+      : availableTypes.includes("FULLY_CUSTOMIZABLE")
+        ? "FULLY_CUSTOMIZABLE"
+        : availableTypes[0],
   );
   const [tireType, setTireType] = useState("SPORT_HARD");
-  const currentConfig = configMap[suspensionType];
-  const [values, setValues] = useState<TuneValues>(getDefaults(currentConfig));
+  const currentConfig = isFreehand ? null : configMap[suspensionType];
+  const [values, setValues] = useState<TuneValues>(
+    isFreehand ? { ...FREEHAND_DEFAULTS } : getDefaults(currentConfig!),
+  );
   const [savedTunes, setSavedTunes] = useState<SavedTune[]>(initialSavedTunes);
   const [saving, setSaving] = useState(false);
   const [highlights, setHighlights] = useState<
     Record<string, "increase" | "decrease">
   >({});
+
+  // Save dialog state
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [tuneName, setTuneName] = useState("");
+
+  // Freehand-specific state
+  const [carName, setCarName] = useState("");
+  const [drivetrain, setDrivetrain] = useState("FR");
+  const [track, setTrack] = useState("");
+  const [bestLap, setBestLap] = useState("");
+
+  // Fetch user's tunes in freehand mode when authenticated
+  useEffect(() => {
+    if (!isFreehand || !user) return;
+    fetch("/api/tunes")
+      .then((res) => res.json())
+      .then((tunes) => setSavedTunes(tunes))
+      .catch(() => {});
+  }, [isFreehand, user]);
+
+  const effectiveDrivetrain = car?.drivetrain ?? drivetrain;
 
   const handleRecommendations = useCallback(
     (h: Record<string, "increase" | "decrease">) => setHighlights(h),
@@ -190,10 +293,12 @@ export function TuneEditor({
     (type: string | null) => {
       if (!type) return;
       setSuspensionType(type);
-      setValues(getDefaults(configMap[type]));
+      if (!isFreehand) {
+        setValues(getDefaults(configMap[type]));
+      }
       setHighlights({});
     },
-    [configMap],
+    [configMap, isFreehand],
   );
 
   const updateValue = useCallback((key: keyof TuneValues, val: number) => {
@@ -201,29 +306,48 @@ export function TuneEditor({
   }, []);
 
   const resetToDefaults = useCallback(() => {
-    setValues(getDefaults(currentConfig));
+    if (isFreehand) {
+      setValues({ ...FREEHAND_DEFAULTS });
+    } else {
+      setValues(getDefaults(currentConfig!));
+    }
     setHighlights({});
-  }, [currentConfig]);
+  }, [currentConfig, isFreehand]);
 
-  const isAdjustable = (minField: keyof TuneConfig) => {
-    return currentConfig[minField] != null;
+  const getRange = (param: string, side: "Min" | "Max") => {
+    const key = `${param}${side}` as keyof typeof FREEHAND_RANGES;
+    if (isFreehand) return FREEHAND_RANGES[key] ?? 0;
+    const configKey = key as keyof TuneConfig;
+    return (currentConfig![configKey] as number) ?? 0;
   };
 
-  const saveTune = async () => {
-    const name = prompt("Name your tune:");
-    if (!name) return;
+  const isAdjustable = (minField: keyof TuneConfig) => {
+    if (isFreehand) return true;
+    return currentConfig![minField] != null;
+  };
+
+  const saveTune = async (name: string) => {
     setSaving(true);
     try {
+      const payload: Record<string, unknown> = {
+        name,
+        suspensionType,
+        tireType,
+        ...values,
+      };
+      if (isFreehand) {
+        payload.carName = carName || "Unnamed Car";
+      } else {
+        payload.carId = car!.id;
+      }
+      if (track) {
+        payload.track = track;
+        if (bestLap) payload.bestLap = bestLap;
+      }
       const res = await fetch("/api/tunes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          carId: car.id,
-          suspensionType,
-          tireType,
-          ...values,
-        }),
+        body: JSON.stringify(payload),
       });
       if (res.ok) {
         const tune = await res.json();
@@ -261,6 +385,9 @@ export function TuneEditor({
       lsdAccelRear: tune.lsdAccelRear,
       lsdDecelRear: tune.lsdDecelRear,
     });
+    if (tune.carName && isFreehand) setCarName(tune.carName);
+    if (tune.track) setTrack(tune.track);
+    if (tune.bestLap) setBestLap(tune.bestLap);
   };
 
   const deleteTune = async (tuneId: string) => {
@@ -274,16 +401,45 @@ export function TuneEditor({
     <div>
       {/* Header */}
       <div className="mb-4">
-        <div className="flex items-center gap-2 mb-1">
-          <h1 className="text-lg font-bold">
-            {car.manufacturer} {car.name}
-          </h1>
-          <Badge variant="secondary" className="text-xs">
-            {car.drivetrain}
-          </Badge>
-        </div>
-        {car.year && (
-          <p className="text-xs text-muted-foreground">{car.year}</p>
+        {isFreehand ? (
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                Car Name
+              </label>
+              <Input
+                placeholder="e.g. Mazda RX-7 Spirit R (FD)"
+                value={carName}
+                onChange={(e) => setCarName(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                Drivetrain
+              </label>
+              <SuspensionSelector
+                value={drivetrain}
+                availableTypes={DRIVETRAIN_OPTIONS}
+                orderArray={DRIVETRAIN_OPTIONS}
+                onChange={(v) => v && setDrivetrain(v)}
+                formatLabel={(v) => v}
+              />
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center gap-2 mb-1">
+              <h1 className="text-lg font-bold">
+                {car.manufacturer} {car.name}
+              </h1>
+              <Badge variant="secondary" className="text-xs">
+                {car.drivetrain}
+              </Badge>
+            </div>
+            {car.year && (
+              <p className="text-xs text-muted-foreground">{car.year}</p>
+            )}
+          </>
         )}
       </div>
 
@@ -307,11 +463,42 @@ export function TuneEditor({
         </label>
         <SuspensionSelector
           value={suspensionType}
-          availableTypes={availableTypes}
+          availableTypes={isFreehand ? SUSPENSION_ORDER : availableTypes}
           orderArray={SUSPENSION_ORDER}
           onChange={handleSuspensionChange}
         />
       </div>
+
+      {/* Track Selector */}
+      <div className="mb-4">
+        <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+          Track
+        </label>
+        <SuspensionSelector
+          value={track || "_none"}
+          availableTypes={["_none", ...TRACK_LIST]}
+          orderArray={["_none", ...TRACK_LIST]}
+          onChange={(v) => {
+            setTrack(v === "_none" ? "" : v ?? "");
+            if (v === "_none" || !v) setBestLap("");
+          }}
+          formatLabel={(v) => (v === "_none" ? "None" : v)}
+        />
+      </div>
+
+      {/* Best Lap */}
+      {track && (
+        <div className="mb-4">
+          <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+            Best Lap Time
+          </label>
+          <Input
+            placeholder="e.g. 1:42.350"
+            value={bestLap}
+            onChange={(e) => setBestLap(e.target.value)}
+          />
+        </div>
+      )}
 
       {/* Weight & Power */}
       <div className="mb-4 flex gap-3">
@@ -359,17 +546,13 @@ export function TuneEditor({
           <ParameterSlider
             label=""
             frontValue={
-              values.bodyHeightFront ??
-              currentConfig.bodyHeightFrontDefault ??
-              100
+              values.bodyHeightFront ?? 100
             }
             rearValue={
-              values.bodyHeightRear ??
-              currentConfig.bodyHeightRearDefault ??
-              100
+              values.bodyHeightRear ?? 100
             }
-            min={currentConfig.bodyHeightFrontMin ?? 80}
-            max={currentConfig.bodyHeightFrontMax ?? 130}
+            min={getRange("bodyHeightFront", "Min")}
+            max={getRange("bodyHeightFront", "Max")}
             step={1}
             unit="mm"
             disabled={!isAdjustable("bodyHeightFrontMin")}
@@ -387,13 +570,13 @@ export function TuneEditor({
           <ParameterSlider
             label=""
             frontValue={
-              values.natFreqFront ?? currentConfig.natFreqFrontDefault ?? 2.0
+              values.natFreqFront ?? 2.0
             }
             rearValue={
-              values.natFreqRear ?? currentConfig.natFreqRearDefault ?? 2.0
+              values.natFreqRear ?? 2.0
             }
-            min={currentConfig.natFreqFrontMin ?? 1.0}
-            max={currentConfig.natFreqFrontMax ?? 5.0}
+            min={getRange("natFreqFront", "Min")}
+            max={getRange("natFreqFront", "Max")}
             step={0.01}
             unit="Hz"
             disabled={!isAdjustable("natFreqFrontMin")}
@@ -412,13 +595,13 @@ export function TuneEditor({
           <ParameterSlider
             label=""
             frontValue={
-              values.antiRollFront ?? currentConfig.antiRollFrontDefault ?? 5
+              values.antiRollFront ?? 5
             }
             rearValue={
-              values.antiRollRear ?? currentConfig.antiRollRearDefault ?? 3
+              values.antiRollRear ?? 3
             }
-            min={currentConfig.antiRollFrontMin ?? 1}
-            max={currentConfig.antiRollFrontMax ?? 10}
+            min={getRange("antiRollFront", "Min")}
+            max={getRange("antiRollFront", "Max")}
             step={1}
             unit=""
             disabled={!isAdjustable("antiRollFrontMin")}
@@ -436,17 +619,13 @@ export function TuneEditor({
           <ParameterSlider
             label=""
             frontValue={
-              values.compressionFront ??
-              currentConfig.compressionFrontDefault ??
-              30
+              values.compressionFront ?? 30
             }
             rearValue={
-              values.compressionRear ??
-              currentConfig.compressionRearDefault ??
-              30
+              values.compressionRear ?? 30
             }
-            min={currentConfig.compressionFrontMin ?? 20}
-            max={currentConfig.compressionFrontMax ?? 40}
+            min={getRange("compressionFront", "Min")}
+            max={getRange("compressionFront", "Max")}
             step={1}
             unit=""
             disabled={!isAdjustable("compressionFrontMin")}
@@ -464,13 +643,13 @@ export function TuneEditor({
           <ParameterSlider
             label=""
             frontValue={
-              values.expansionFront ?? currentConfig.expansionFrontDefault ?? 40
+              values.expansionFront ?? 40
             }
             rearValue={
-              values.expansionRear ?? currentConfig.expansionRearDefault ?? 40
+              values.expansionRear ?? 40
             }
-            min={currentConfig.expansionFrontMin ?? 30}
-            max={currentConfig.expansionFrontMax ?? 50}
+            min={getRange("expansionFront", "Min")}
+            max={getRange("expansionFront", "Max")}
             step={1}
             unit=""
             disabled={!isAdjustable("expansionFrontMin")}
@@ -488,13 +667,13 @@ export function TuneEditor({
           <ParameterSlider
             label=""
             frontValue={
-              values.camberFront ?? currentConfig.camberFrontDefault ?? 0
+              values.camberFront ?? 0
             }
             rearValue={
-              values.camberRear ?? currentConfig.camberRearDefault ?? 0
+              values.camberRear ?? 0
             }
-            min={currentConfig.camberFrontMin ?? 0}
-            max={currentConfig.camberFrontMax ?? 5.0}
+            min={getRange("camberFront", "Min")}
+            max={getRange("camberFront", "Max")}
             step={0.1}
             unit={"\u00B0"}
             disabled={!isAdjustable("camberFrontMin")}
@@ -512,10 +691,10 @@ export function TuneEditor({
         <ParameterGroup title="Toe Angle">
           <ParameterSlider
             label=""
-            frontValue={values.toeFront ?? currentConfig.toeFrontDefault ?? 0}
-            rearValue={values.toeRear ?? currentConfig.toeRearDefault ?? 0}
-            min={currentConfig.toeFrontMin ?? -0.5}
-            max={currentConfig.toeFrontMax ?? 0.5}
+            frontValue={values.toeFront ?? 0}
+            rearValue={values.toeRear ?? 0}
+            min={getRange("toeFront", "Min")}
+            max={getRange("toeFront", "Max")}
             step={0.01}
             unit={"\u00B0"}
             disabled={!isAdjustable("toeFrontMin")}
@@ -532,12 +711,12 @@ export function TuneEditor({
         {/* LSD */}
         <ParameterGroup title="LSD">
           <div className="space-y-3">
-            {!["FR", "MR", "RR"].includes(car.drivetrain) && (
+            {!["FR", "MR", "RR"].includes(effectiveDrivetrain) && (
               <div className="space-y-2">
                 <p className="text-xs font-medium text-muted-foreground">Front</p>
                 <StepperRow
                   label="Init"
-                  value={values.lsdInitFront ?? currentConfig.lsdInitFrontDefault ?? 10}
+                  value={values.lsdInitFront ?? 10}
                   min={0}
                   max={60}
                   step={5}
@@ -550,7 +729,7 @@ export function TuneEditor({
                 />
                 <StepperRow
                   label="Accel"
-                  value={values.lsdAccelFront ?? currentConfig.lsdAccelFrontDefault ?? 20}
+                  value={values.lsdAccelFront ?? 20}
                   min={0}
                   max={60}
                   step={5}
@@ -563,7 +742,7 @@ export function TuneEditor({
                 />
                 <StepperRow
                   label="Decel"
-                  value={values.lsdDecelFront ?? currentConfig.lsdDecelFrontDefault ?? 15}
+                  value={values.lsdDecelFront ?? 15}
                   min={0}
                   max={60}
                   step={5}
@@ -576,12 +755,12 @@ export function TuneEditor({
                 />
               </div>
             )}
-            {car.drivetrain !== "FF" && (
+            {effectiveDrivetrain !== "FF" && (
               <div className="space-y-2">
                 <p className="text-xs font-medium text-muted-foreground">Rear</p>
                 <StepperRow
                   label="Init"
-                  value={values.lsdInitRear ?? currentConfig.lsdInitRearDefault ?? 10}
+                  value={values.lsdInitRear ?? 10}
                   min={0}
                   max={60}
                   step={5}
@@ -594,7 +773,7 @@ export function TuneEditor({
                 />
                 <StepperRow
                   label="Accel"
-                  value={values.lsdAccelRear ?? currentConfig.lsdAccelRearDefault ?? 20}
+                  value={values.lsdAccelRear ?? 20}
                   min={0}
                   max={60}
                   step={5}
@@ -607,7 +786,7 @@ export function TuneEditor({
                 />
                 <StepperRow
                   label="Decel"
-                  value={values.lsdDecelRear ?? currentConfig.lsdDecelRearDefault ?? 15}
+                  value={values.lsdDecelRear ?? 15}
                   min={0}
                   max={60}
                   step={5}
@@ -626,18 +805,57 @@ export function TuneEditor({
 
       {/* Action Buttons */}
       <div className="flex gap-2 mt-6">
-        <Button onClick={saveTune} disabled={saving} className="flex-1">
+        <Button
+          onClick={() => { setTuneName(""); setSaveDialogOpen(true); }}
+          disabled={saving || !user}
+          className="flex-1"
+        >
           {saving ? "Saving..." : "Save Tune"}
         </Button>
         <SavedTunesSheet
           tunes={savedTunes}
           onLoad={loadTune}
           onDelete={deleteTune}
+          disabled={!user}
         />
         <Button variant="outline" onClick={resetToDefaults}>
           Reset
         </Button>
       </div>
+      {!user && (
+        <p className="text-xs text-muted-foreground text-center mt-2">
+          Log in to save and load tunes
+        </p>
+      )}
+
+      {/* Save Tune Dialog */}
+      <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Name your tune</DialogTitle>
+          </DialogHeader>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!tuneName.trim()) return;
+              setSaveDialogOpen(false);
+              saveTune(tuneName.trim());
+            }}
+          >
+            <Input
+              autoFocus
+              placeholder="e.g. Nordschleife low downforce"
+              value={tuneName}
+              onChange={(e) => setTuneName(e.target.value)}
+            />
+            <DialogFooter className="mt-4">
+              <Button type="submit" disabled={!tuneName.trim()}>
+                Save
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* Bottom padding for fixed advisor bar */}
       <div className="pb-24" />

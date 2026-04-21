@@ -1,16 +1,16 @@
-import { prisma } from "@/lib/prisma";
-import { CarPicker } from "@/components/car-picker";
+"use client";
 
-export default async function HomePage() {
-  const cars = await prisma.car.findMany({ orderBy: { id: "asc" } });
+import { TuneEditor } from "@/components/tune-editor";
+import { UserMenu } from "@/components/user-menu";
 
+export default function HomePage() {
   return (
-    <main className="mx-auto max-w-lg px-4 py-6">
-      <h1 className="text-xl font-bold mb-1">GT7 Tuning Assistant</h1>
-      <p className="text-sm text-muted-foreground mb-4">
-        Select a car to start tuning
-      </p>
-      <CarPicker cars={cars} />
+    <main className="mx-auto max-w-lg px-4 py-4">
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-xl font-bold">GT7 Tuning Assistant</h1>
+        <UserMenu />
+      </div>
+      <TuneEditor car={null} configs={[]} savedTunes={[]} />
     </main>
   );
 }

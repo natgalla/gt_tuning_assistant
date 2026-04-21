@@ -208,7 +208,7 @@ export function TuningAdvisor({
                     : throttle === "off-throttle"
                       ? "Off"
                       : "Brake"
-                  : "Throttle"}
+                  : "Input"}
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">Any</SelectItem>

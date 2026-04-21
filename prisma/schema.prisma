@@ -7,6 +7,14 @@ datasource db {
   provider = "postgresql"
 }
 
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  tunes        Tune[]
+}
+
 model Car {
   id           Int     @id
   name         String
@@ -111,8 +119,13 @@ model TuneConfig {
 model Tune {
   id             String         @id @default(cuid())
   name           String
-  carId          Int
-  car            Car            @relation(fields: [carId], references: [id])
+  carId          Int?
+  car            Car?           @relation(fields: [carId], references: [id])
+  carName        String?
+  userId         String?
+  user           User?          @relation(fields: [userId], references: [id])
+  track          String?
+  bestLap        String?
   suspensionType SuspensionType
   tireType       TireType
   createdAt      DateTime       @default(now())
