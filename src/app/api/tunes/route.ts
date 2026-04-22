@@ -61,6 +61,7 @@ export async function POST(request: NextRequest) {
       lsdInitRear: body.lsdInitRear,
       lsdAccelRear: body.lsdAccelRear,
       lsdDecelRear: body.lsdDecelRear,
+      torqueDistribution: body.torqueDistribution ?? null,
     },
   });
 

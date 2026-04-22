@@ -21,6 +21,8 @@ model Car {
   manufacturer String
   year         Int?
   drivetrain   String
+  weight       Int?
+  horsePower   Int?
 
   tunes       Tune[]
   tuneConfigs TuneConfig[]
@@ -151,6 +153,7 @@ model Tune {
   lsdAccelFront    Int?
   lsdDecelFront    Int?
   lsdInitRear      Int?
-  lsdAccelRear     Int?
-  lsdDecelRear     Int?
+  lsdAccelRear         Int?
+  lsdDecelRear         Int?
+  torqueDistribution   Int?
 }

@@ -39,9 +39,11 @@ const PARAM_LABELS: Record<string, string> = {
   lsdInitRear: "LSD Init R",
   lsdAccelRear: "LSD Accel R",
   lsdDecelRear: "LSD Decel R",
+  torqueDistribution: "Torque Dist",
 };
 
 interface TuningAdvisorProps {
+  drivetrain: string;
   onRecommendations: (
     highlights: Record<string, "increase" | "decrease">,
   ) => void;
@@ -49,6 +51,7 @@ interface TuningAdvisorProps {
 }
 
 export function TuningAdvisor({
+  drivetrain,
   onRecommendations,
   onDismiss,
 }: TuningAdvisorProps) {
@@ -64,10 +67,10 @@ export function TuningAdvisor({
 
   const handleAdvise = useCallback(() => {
     if (!symptom) return;
-    const recs = getRecommendations(symptom, phase, speed, throttle, elevation);
+    const recs = getRecommendations(symptom, phase, speed, throttle, elevation, drivetrain);
     setResults(recs);
     onRecommendations(recs);
-  }, [symptom, phase, speed, throttle, elevation, onRecommendations]);
+  }, [symptom, phase, speed, throttle, elevation, drivetrain, onRecommendations]);
 
   const handleDismiss = useCallback(() => {
     setResults(null);
@@ -127,137 +130,146 @@ export function TuningAdvisor({
       {/* Selector bar */}
       <div className="border-t bg-background px-4 py-3">
         <div className="mx-auto max-w-lg">
-          <div className="flex gap-1.5 items-center">
-            <Select
-              value={symptom ?? ""}
-              onValueChange={(v) => {
-                setSymptom(v as Symptom);
-                setResults(null);
-                onDismiss();
-              }}
-            >
-              <SelectTrigger className="flex-1 h-9 text-xs">
-                {symptom === "snap-oversteer"
-                  ? "Snap OS"
-                  : symptom
-                    ? symptom.charAt(0).toUpperCase() + symptom.slice(1)
-                    : "Symptom"}
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="understeer">Understeer</SelectItem>
-                <SelectItem value="oversteer">Oversteer</SelectItem>
-                <SelectItem value="snap-oversteer">Snap Oversteer</SelectItem>
-                <SelectItem value="instability">Instability</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="space-y-1.5">
+            {/* Row 1: Symptom + Lightbulb + X */}
+            <div className="flex gap-1.5 items-center">
+              <Select
+                value={symptom ?? ""}
+                onValueChange={(v) => {
+                  setSymptom(v as Symptom);
+                  setResults(null);
+                  onDismiss();
+                }}
+              >
+                <SelectTrigger className="flex-1 h-9 text-xs">
+                  {symptom === "snap-oversteer"
+                    ? "Snap OS"
+                    : symptom
+                      ? symptom.charAt(0).toUpperCase() + symptom.slice(1)
+                      : "Symptom"}
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="understeer">Understeer</SelectItem>
+                  <SelectItem value="oversteer">Oversteer</SelectItem>
+                  <SelectItem value="snap-oversteer">Snap Oversteer</SelectItem>
+                  <SelectItem value="instability">Instability</SelectItem>
+                </SelectContent>
+              </Select>
 
-            <Select
-              value={phase ?? "none"}
-              onValueChange={(v) => {
-                setPhase(v === "none" ? null : (v as Phase));
-                setResults(null);
-                onDismiss();
-              }}
-            >
-              <SelectTrigger className="flex-1 h-9 text-xs">
-                {phase
-                  ? phase.charAt(0).toUpperCase() + phase.slice(1)
-                  : "Phase"}
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Any</SelectItem>
-                <SelectItem value="entry">Entry</SelectItem>
-                <SelectItem value="mid">Mid</SelectItem>
-                <SelectItem value="exit">Exit</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select
-              value={speed ?? "none"}
-              onValueChange={(v) => {
-                setSpeed(v === "none" ? null : (v as CornerSpeed));
-                setResults(null);
-                onDismiss();
-              }}
-            >
-              <SelectTrigger className="flex-1 h-9 text-xs">
-                {speed
-                  ? speed.charAt(0).toUpperCase() + speed.slice(1)
-                  : "Speed"}
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Any</SelectItem>
-                <SelectItem value="low">Low</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select
-              value={throttle ?? "none"}
-              onValueChange={(v) => {
-                setThrottle(v === "none" ? null : (v as ThrottleState));
-                setResults(null);
-                onDismiss();
-              }}
-            >
-              <SelectTrigger className="flex-1 h-9 text-xs">
-                {throttle
-                  ? throttle === "on-throttle"
-                    ? "On"
-                    : throttle === "off-throttle"
-                      ? "Off"
-                      : "Brake"
-                  : "Input"}
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Any</SelectItem>
-                <SelectItem value="on-throttle">On-Throttle</SelectItem>
-                <SelectItem value="off-throttle">Off-Throttle</SelectItem>
-                <SelectItem value="braking">Braking</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select
-              value={elevation ?? "none"}
-              onValueChange={(v) => {
-                setElevation(v === "none" ? null : (v as Elevation));
-                setResults(null);
-                onDismiss();
-              }}
-            >
-              <SelectTrigger className="flex-1 h-9 text-xs">
-                {elevation
-                  ? elevation.charAt(0).toUpperCase() + elevation.slice(1)
-                  : "Elev."}
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Any</SelectItem>
-                <SelectItem value="up">Uphill</SelectItem>
-                <SelectItem value="down">Downhill</SelectItem>
-                <SelectItem value="neutral">Flat</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Button
-              size="icon"
-              className="h-9 w-9 shrink-0"
-              disabled={!symptom}
-              onClick={handleAdvise}
-            >
-              <Lightbulb className="h-4 w-4" />
-            </Button>
-
-            {results && (
               <Button
-                variant="ghost"
                 size="icon"
                 className="h-9 w-9 shrink-0"
-                onClick={handleReset}
+                disabled={!symptom}
+                onClick={handleAdvise}
               >
-                <X className="h-4 w-4" />
+                <Lightbulb className="h-4 w-4" />
               </Button>
-            )}
+
+              {results && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 shrink-0"
+                  onClick={handleReset}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+
+            {/* Row 2: Phase + Speed */}
+            <div className="flex gap-1.5 items-center">
+              <Select
+                value={phase ?? "none"}
+                onValueChange={(v) => {
+                  setPhase(v === "none" ? null : (v as Phase));
+                  setResults(null);
+                  onDismiss();
+                }}
+              >
+                <SelectTrigger className="flex-1 h-9 text-xs">
+                  {phase
+                    ? phase.charAt(0).toUpperCase() + phase.slice(1)
+                    : "Phase"}
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Any</SelectItem>
+                  <SelectItem value="entry">Entry</SelectItem>
+                  <SelectItem value="mid">Mid</SelectItem>
+                  <SelectItem value="exit">Exit</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={speed ?? "none"}
+                onValueChange={(v) => {
+                  setSpeed(v === "none" ? null : (v as CornerSpeed));
+                  setResults(null);
+                  onDismiss();
+                }}
+              >
+                <SelectTrigger className="flex-1 h-9 text-xs">
+                  {speed
+                    ? speed.charAt(0).toUpperCase() + speed.slice(1)
+                    : "Speed"}
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Any</SelectItem>
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Row 3: Input + Elevation */}
+            <div className="flex gap-1.5 items-center">
+              <Select
+                value={throttle ?? "none"}
+                onValueChange={(v) => {
+                  setThrottle(v === "none" ? null : (v as ThrottleState));
+                  setResults(null);
+                  onDismiss();
+                }}
+              >
+                <SelectTrigger className="flex-1 h-9 text-xs">
+                  {throttle
+                    ? throttle === "on-throttle"
+                      ? "On"
+                      : throttle === "off-throttle"
+                        ? "Off"
+                        : "Brake"
+                    : "Input"}
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Any</SelectItem>
+                  <SelectItem value="on-throttle">On-Throttle</SelectItem>
+                  <SelectItem value="off-throttle">Off-Throttle</SelectItem>
+                  <SelectItem value="braking">Braking</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={elevation ?? "none"}
+                onValueChange={(v) => {
+                  setElevation(v === "none" ? null : (v as Elevation));
+                  setResults(null);
+                  onDismiss();
+                }}
+              >
+                <SelectTrigger className="flex-1 h-9 text-xs">
+                  {elevation
+                    ? elevation.charAt(0).toUpperCase() + elevation.slice(1)
+                    : "Elev."}
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Any</SelectItem>
+                  <SelectItem value="up">Uphill</SelectItem>
+                  <SelectItem value="down">Downhill</SelectItem>
+                  <SelectItem value="neutral">Flat</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
       </div>

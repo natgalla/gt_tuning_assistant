@@ -99,6 +99,16 @@ const RULES: Rule[] = [
   { symptom: "understeer", phase: "exit", elevation: "up", parameter: "antiRollRear", direction: "increase" },
   { symptom: "oversteer", phase: "exit", elevation: "up", parameter: "lsdAccelRear", direction: "increase" },
 
+  // ── AWD Torque Distribution ──
+  // Lower value = more rear-biased; reduces front drive load → frees front grip for turning
+  { symptom: "understeer", phase: "mid", parameter: "torqueDistribution", direction: "decrease" },
+  { symptom: "understeer", phase: "exit", throttle: "on-throttle", parameter: "torqueDistribution", direction: "decrease" },
+  // Higher value = more front-biased; reduces rear drive load → stabilises rear
+  { symptom: "oversteer", phase: "mid", parameter: "torqueDistribution", direction: "increase" },
+  { symptom: "oversteer", phase: "exit", throttle: "on-throttle", parameter: "torqueDistribution", direction: "increase" },
+  { symptom: "snap-oversteer", phase: "exit", throttle: "on-throttle", parameter: "torqueDistribution", direction: "increase" },
+  { symptom: "instability", phase: "exit", throttle: "on-throttle", parameter: "torqueDistribution", direction: "increase" },
+
   // ── Elevation: Downhill (weight shifts front → rear lighter) ──
   { symptom: "oversteer", phase: "entry", elevation: "down", parameter: "bodyHeightRear", direction: "decrease" },
   { symptom: "oversteer", phase: "mid", elevation: "down", parameter: "compressionFront", direction: "increase" },
@@ -113,7 +123,10 @@ export function getRecommendations(
   speed: CornerSpeed | null,
   throttle: ThrottleState | null,
   elevation: Elevation | null,
+  drivetrain?: string,
 ): Record<string, Direction> {
+  const excludeParams = drivetrain !== "4WD" ? new Set(["torqueDistribution"]) : null;
+
   if (phase) {
     // Specific phase: collect all matching rules directly
     const result: Record<string, Direction> = {};
@@ -123,6 +136,7 @@ export function getRecommendations(
       if (rule.speed && rule.speed !== speed) continue;
       if (rule.throttle && rule.throttle !== throttle) continue;
       if (rule.elevation && rule.elevation !== elevation) continue;
+      if (excludeParams?.has(rule.parameter)) continue;
       result[rule.parameter] = rule.direction;
     }
     return result;
@@ -135,6 +149,7 @@ export function getRecommendations(
     if (rule.speed && rule.speed !== speed) continue;
     if (rule.throttle && rule.throttle !== throttle) continue;
     if (rule.elevation && rule.elevation !== elevation) continue;
+    if (excludeParams?.has(rule.parameter)) continue;
 
     const entry = seen.get(rule.parameter);
     if (!entry) {

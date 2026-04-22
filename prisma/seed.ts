@@ -2,6 +2,7 @@ import "dotenv/config";
 import pg from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient, SuspensionType } from "../src/generated/prisma/client";
+import { GT7_CAR_CATALOG } from "./gt7-car-catalog";
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
@@ -296,6 +297,8 @@ async function main() {
         manufacturer: car.manufacturer,
         year: car.year,
         drivetrain: car.drivetrain,
+        weight: car.weight,
+        horsePower: car.horsePower,
       },
       create: {
         id: car.id,
@@ -303,6 +306,8 @@ async function main() {
         manufacturer: car.manufacturer,
         year: car.year,
         drivetrain: car.drivetrain,
+        weight: car.weight,
+        horsePower: car.horsePower,
       },
     });
 
@@ -321,7 +326,37 @@ async function main() {
     }
   }
 
-  console.log("Seeded 6 cars with 30 tune configs.");
+  console.log("Seeded 6 Silvias with 30 tune configs.");
+
+  // Seed all GT7 cars from catalog
+  const silviaIds = new Set(silvias.map((s) => s.id));
+  let catalogCount = 0;
+  for (const car of GT7_CAR_CATALOG) {
+    if (silviaIds.has(car.id)) continue; // Already seeded above with TuneConfigs
+    await prisma.car.upsert({
+      where: { id: car.id },
+      update: {
+        name: car.name,
+        manufacturer: car.manufacturer,
+        year: car.year,
+        drivetrain: car.drivetrain,
+        weight: car.weight,
+        horsePower: car.horsePower,
+      },
+      create: {
+        id: car.id,
+        name: car.name,
+        manufacturer: car.manufacturer,
+        year: car.year,
+        drivetrain: car.drivetrain,
+        weight: car.weight,
+        horsePower: car.horsePower,
+      },
+    });
+    catalogCount++;
+  }
+
+  console.log(`Seeded ${catalogCount} additional cars from catalog.`);
 }
 
 main()
