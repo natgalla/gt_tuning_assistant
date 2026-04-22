@@ -20,6 +20,7 @@ import {
 import { SUSPENSION_ORDER, TIRE_ORDER } from "@/lib/utils";
 import { useAuth } from "@/lib/auth-context";
 import { GT7_TRACKS } from "@/lib/tracks";
+import type { Drivetrain } from "@/lib/tuning-rules";
 
 interface TuneConfig {
   id: number;
@@ -269,7 +270,7 @@ export function TuneEditor({
   // Freehand-specific state
   const [selectedCar, setSelectedCar] = useState<CatalogCar | null>(null);
   const [carName, setCarName] = useState("");
-  const [drivetrain, setDrivetrain] = useState("FR");
+  const [drivetrain, setDrivetrain] = useState<Drivetrain>("FR");
   const [track, setTrack] = useState("");
   const [bestLap, setBestLap] = useState("");
 
@@ -299,7 +300,7 @@ export function TuneEditor({
       setSelectedCar(selected);
       if (selected) {
         setCarName(`${selected.manufacturer} ${selected.name}`);
-        setDrivetrain(selected.drivetrain);
+        setDrivetrain(selected.drivetrain as Drivetrain);
         setValues((prev) => ({
           ...prev,
           weight: selected.weight,
@@ -314,7 +315,7 @@ export function TuneEditor({
     [],
   );
 
-  const effectiveDrivetrain = car?.drivetrain ?? drivetrain;
+  const effectiveDrivetrain = (car?.drivetrain as Drivetrain | undefined) ?? drivetrain;
 
   const handleRecommendations = useCallback(
     (h: Record<string, "increase" | "decrease">) => setHighlights(h),
@@ -439,7 +440,7 @@ export function TuneEditor({
       if (tune.carId) {
         const found = carList.find((c) => c.id === tune.carId) ?? null;
         setSelectedCar(found);
-        if (found) setDrivetrain(found.drivetrain);
+        if (found) setDrivetrain(found.drivetrain as Drivetrain);
       } else {
         setSelectedCar(null);
       }

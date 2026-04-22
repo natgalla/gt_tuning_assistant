@@ -16,6 +16,7 @@ import {
   type CornerSpeed,
   type ThrottleState,
   type Elevation,
+  type Drivetrain,
 } from "@/lib/tuning-rules";
 
 const PARAM_LABELS: Record<string, string> = {
@@ -43,7 +44,7 @@ const PARAM_LABELS: Record<string, string> = {
 };
 
 interface TuningAdvisorProps {
-  drivetrain: string;
+  drivetrain: Drivetrain;
   onRecommendations: (
     highlights: Record<string, "increase" | "decrease">,
   ) => void;
