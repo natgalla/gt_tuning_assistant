@@ -162,8 +162,8 @@ const FREEHAND_DEFAULTS: TuneValues = {
   bodyHeightRear: 100,
   natFreqFront: 2.0,
   natFreqRear: 2.0,
-  antiRollFront: 5,
-  antiRollRear: 3,
+  antiRollFront: 4,
+  antiRollRear: 4,
   compressionFront: 30,
   compressionRear: 30,
   expansionFront: 40,
@@ -295,27 +295,25 @@ export function TuneEditor({
       .catch(() => {});
   }, [isFreehand]);
 
-  const handleCarSelect = useCallback(
-    (selected: CatalogCar | null) => {
-      setSelectedCar(selected);
-      if (selected) {
-        setCarName(`${selected.manufacturer} ${selected.name}`);
-        setDrivetrain(selected.drivetrain as Drivetrain);
-        setValues((prev) => ({
-          ...prev,
-          weight: selected.weight,
-          horsePower: selected.horsePower,
-        }));
-      } else {
-        setCarName("");
-        setDrivetrain("FR");
-        setValues((prev) => ({ ...prev, weight: null, horsePower: null }));
-      }
-    },
-    [],
-  );
+  const handleCarSelect = useCallback((selected: CatalogCar | null) => {
+    setSelectedCar(selected);
+    if (selected) {
+      setCarName(`${selected.manufacturer} ${selected.name}`);
+      setDrivetrain(selected.drivetrain as Drivetrain);
+      setValues((prev) => ({
+        ...prev,
+        weight: selected.weight,
+        horsePower: selected.horsePower,
+      }));
+    } else {
+      setCarName("");
+      setDrivetrain("FR");
+      setValues((prev) => ({ ...prev, weight: null, horsePower: null }));
+    }
+  }, []);
 
-  const effectiveDrivetrain = (car?.drivetrain as Drivetrain | undefined) ?? drivetrain;
+  const effectiveDrivetrain =
+    (car?.drivetrain as Drivetrain | undefined) ?? drivetrain;
 
   const handleRecommendations = useCallback(
     (h: Record<string, "increase" | "decrease">) => setHighlights(h),
@@ -781,7 +779,7 @@ export function TuneEditor({
                   value={values.lsdInitFront ?? 10}
                   min={0}
                   max={60}
-                  step={5}
+                  step={1}
                   unit=""
                   disabled={false}
                   formatValue={(v) => `${v}`}
@@ -794,7 +792,7 @@ export function TuneEditor({
                   value={values.lsdAccelFront ?? 20}
                   min={0}
                   max={60}
-                  step={5}
+                  step={1}
                   unit=""
                   disabled={false}
                   formatValue={(v) => `${v}`}
@@ -807,7 +805,7 @@ export function TuneEditor({
                   value={values.lsdDecelFront ?? 15}
                   min={0}
                   max={60}
-                  step={5}
+                  step={1}
                   unit=""
                   disabled={false}
                   formatValue={(v) => `${v}`}
@@ -827,7 +825,7 @@ export function TuneEditor({
                   value={values.lsdInitRear ?? 10}
                   min={0}
                   max={60}
-                  step={5}
+                  step={1}
                   unit=""
                   disabled={false}
                   formatValue={(v) => `${v}`}
@@ -840,7 +838,7 @@ export function TuneEditor({
                   value={values.lsdAccelRear ?? 20}
                   min={0}
                   max={60}
-                  step={5}
+                  step={1}
                   unit=""
                   disabled={false}
                   formatValue={(v) => `${v}`}
@@ -853,7 +851,7 @@ export function TuneEditor({
                   value={values.lsdDecelRear ?? 15}
                   min={0}
                   max={60}
-                  step={5}
+                  step={1}
                   unit=""
                   disabled={false}
                   formatValue={(v) => `${v}`}
