@@ -20,7 +20,7 @@ export function UserMenu() {
     return (
       <div className="flex items-center gap-2">
         <span className="text-xs text-muted-foreground truncate max-w-[160px]">
-          {user.email}
+          {user.displayName ?? user.email}
         </span>
         <Button variant="ghost" size="sm" onClick={logout}>
           Log Out

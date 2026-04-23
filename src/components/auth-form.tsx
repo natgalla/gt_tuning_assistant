@@ -15,6 +15,7 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -26,7 +27,7 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
       const err =
         mode === "login"
           ? await login(email, password)
-          : await signup(email, password);
+          : await signup(email, password, displayName || undefined);
       if (err) {
         setError(err);
       } else {
@@ -39,6 +40,18 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {mode === "signup" && (
+        <div className="space-y-2">
+          <Label htmlFor="displayName">Display Name</Label>
+          <Input
+            id="displayName"
+            type="text"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            autoComplete="username"
+          />
+        </div>
+      )}
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
         <Input

@@ -31,5 +31,5 @@ export async function POST(request: NextRequest) {
   const token = await createToken(user.id);
   await setAuthCookie(token);
 
-  return NextResponse.json({ id: user.id, email: user.email });
+  return NextResponse.json({ id: user.id, email: user.email, displayName: user.displayName });
 }

@@ -5,12 +5,13 @@ import { createContext, useContext, useState, useCallback } from "react";
 interface AuthUser {
   id: string;
   email: string;
+  displayName: string | null;
 }
 
 interface AuthContextValue {
   user: AuthUser | null;
   login: (email: string, password: string) => Promise<string | null>;
-  signup: (email: string, password: string) => Promise<string | null>;
+  signup: (email: string, password: string, displayName?: string) => Promise<string | null>;
   logout: () => Promise<void>;
 }
 
@@ -40,11 +41,11 @@ export function AuthProvider({
     return null;
   }, []);
 
-  const signup = useCallback(async (email: string, password: string) => {
+  const signup = useCallback(async (email: string, password: string, displayName?: string) => {
     const res = await fetch("/api/auth/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, displayName }),
     });
     if (!res.ok) {
       const data = await res.json();
