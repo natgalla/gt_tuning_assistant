@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { hashPassword, createToken, setAuthCookie } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
-  const { email, password } = await request.json();
+  const { email, password, displayName } = await request.json();
 
   if (!email || !password || password.length < 6) {
     return NextResponse.json(
@@ -22,8 +22,8 @@ export async function POST(request: NextRequest) {
 
   const passwordHash = await hashPassword(password);
   const user = await prisma.user.create({
-    data: { email, passwordHash },
-    select: { id: true, email: true },
+    data: { email, passwordHash, displayName: displayName || null },
+    select: { id: true, email: true, displayName: true },
   });
 
   const token = await createToken(user.id);
