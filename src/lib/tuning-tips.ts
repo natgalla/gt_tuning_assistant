@@ -189,11 +189,11 @@ const PARAMETER_DEFS: Record<string, ParameterDef> = {
   },
   toeFront: {
     thresholds: {
-      comfort: [-0.5, -0.3, 0.3, 0.5],
-      sport: [-0.6, -0.4, 0.4, 0.6],
-      racing: [-0.8, -0.5, 0.5, 0.8],
-      weather: [-0.4, -0.2, 0.2, 0.4],
-      offroad: [-0.4, -0.2, 0.2, 0.4],
+      comfort: [-0.25, -0.12, 0.12, 0.25],
+      sport: [-0.3, -0.15, 0.15, 0.3],
+      racing: [-0.35, -0.18, 0.18, 0.35],
+      weather: [-0.2, -0.1, 0.1, 0.2],
+      offroad: [-0.2, -0.1, 0.1, 0.2],
     },
     label: "front toe",
     lowConsequence: "twitchy turn-in and instability at speed",
@@ -201,11 +201,11 @@ const PARAMETER_DEFS: Record<string, ParameterDef> = {
   },
   toeRear: {
     thresholds: {
-      comfort: [-0.3, -0.1, 0.4, 0.6],
-      sport: [-0.4, -0.2, 0.5, 0.7],
-      racing: [-0.5, -0.3, 0.6, 0.8],
-      weather: [-0.2, -0.1, 0.3, 0.5],
-      offroad: [-0.2, -0.1, 0.3, 0.5],
+      comfort: [-0.15, -0.05, 0.2, 0.35],
+      sport: [-0.2, -0.08, 0.25, 0.4],
+      racing: [-0.25, -0.1, 0.3, 0.45],
+      weather: [-0.1, -0.05, 0.18, 0.3],
+      offroad: [-0.1, -0.05, 0.18, 0.3],
     },
     label: "rear toe",
     lowConsequence: "rear instability and oversteer",

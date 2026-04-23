@@ -93,7 +93,7 @@ export function StepperRow({
         <Minus className="h-3.5 w-3.5" />
       </Button>
       <span
-        className={`flex-1 text-center text-sm font-mono tabular-nums ${disabled ? "text-muted-foreground" : ""}`}
+        className={`flex-1 text-center text-sm font-mono tabular-nums ${disabled ? "text-muted-foreground" : ""} ${tip && tipSeverity && "-mr-10"}`}
       >
         {formatValue(value)}
         {unit && <span className="text-muted-foreground ml-0.5">{unit}</span>}
