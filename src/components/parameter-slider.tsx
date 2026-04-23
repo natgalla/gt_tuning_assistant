@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
+import TipIcon from "@/components/ui/tipIcon";
 import { Button } from "@/components/ui/button";
 import { Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -21,6 +22,10 @@ interface ParameterSliderProps {
   rearHighlight?: "increase" | "decrease";
   onFrontHighlightClear?: () => void;
   onRearHighlightClear?: () => void;
+  frontTip?: string;
+  frontTipSeverity?: "info" | "warning";
+  rearTip?: string;
+  rearTipSeverity?: "info" | "warning";
 }
 
 function roundToStep(value: number, step: number): number {
@@ -40,6 +45,8 @@ export function StepperRow({
   onChange,
   highlight,
   onHighlightClear,
+  tip,
+  tipSeverity,
 }: {
   label: string;
   value: number;
@@ -52,6 +59,8 @@ export function StepperRow({
   onChange: (v: number) => void;
   highlight?: "increase" | "decrease";
   onHighlightClear?: () => void;
+  tip?: string;
+  tipSeverity?: "info" | "warning";
 }) {
   const decrement = useCallback(() => {
     const next = roundToStep(value - step, step);
@@ -83,10 +92,13 @@ export function StepperRow({
       >
         <Minus className="h-3.5 w-3.5" />
       </Button>
-      <span className={`flex-1 text-center text-sm font-mono tabular-nums ${disabled ? "text-muted-foreground" : ""}`}>
+      <span
+        className={`flex-1 text-center text-sm font-mono tabular-nums ${disabled ? "text-muted-foreground" : ""} ${tip && tipSeverity && "-mr-10"}`}
+      >
         {formatValue(value)}
         {unit && <span className="text-muted-foreground ml-0.5">{unit}</span>}
       </span>
+      {tip && tipSeverity && <TipIcon tip={tip} severity={tipSeverity} />}
       <Button
         variant="outline"
         size="icon"
@@ -120,6 +132,10 @@ export function ParameterSlider({
   rearHighlight,
   onFrontHighlightClear,
   onRearHighlightClear,
+  frontTip,
+  frontTipSeverity,
+  rearTip,
+  rearTipSeverity,
 }: ParameterSliderProps) {
   const fmt = formatValue ?? ((v: number) => `${v}`);
 
@@ -142,6 +158,8 @@ export function ParameterSlider({
         onChange={onFrontChange}
         highlight={frontHighlight}
         onHighlightClear={onFrontHighlightClear}
+        tip={frontTip}
+        tipSeverity={frontTipSeverity}
       />
       <StepperRow
         label="Rear"
@@ -155,6 +173,8 @@ export function ParameterSlider({
         onChange={onRearChange}
         highlight={rearHighlight}
         onHighlightClear={onRearHighlightClear}
+        tip={rearTip}
+        tipSeverity={rearTipSeverity}
       />
     </div>
   );

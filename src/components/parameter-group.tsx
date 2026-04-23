@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import TipIcon from "@/components/ui/tipIcon";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -8,12 +9,16 @@ interface ParameterGroupProps {
   title: string;
   children: React.ReactNode;
   defaultOpen?: boolean;
+  discrepancyTip?: string;
+  discrepancyTipSeverity?: "info" | "warning";
 }
 
 export function ParameterGroup({
   title,
   children,
   defaultOpen = true,
+  discrepancyTip,
+  discrepancyTipSeverity,
 }: ParameterGroupProps) {
   const [open, setOpen] = useState(defaultOpen);
 
@@ -24,11 +29,16 @@ export function ParameterGroup({
         onClick={() => setOpen(!open)}
         className="flex w-full items-center justify-between py-3 px-1 text-sm font-medium"
       >
-        {title}
+        <span className="flex items-center gap-1.5">
+          {title}
+          {discrepancyTip && discrepancyTipSeverity && (
+            <TipIcon tip={discrepancyTip} severity={discrepancyTipSeverity} />
+          )}
+        </span>
         <ChevronDown
           className={cn(
             "h-4 w-4 text-muted-foreground transition-transform",
-            open && "rotate-180"
+            open && "rotate-180",
           )}
         />
       </button>
