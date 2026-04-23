@@ -844,7 +844,7 @@ export function TuneEditor({
                 <StepperRow
                   label="Init"
                   value={values.lsdInitFront ?? 10}
-                  min={0}
+                  min={5}
                   max={60}
                   step={1}
                   unit=""
@@ -859,7 +859,7 @@ export function TuneEditor({
                 <StepperRow
                   label="Accel"
                   value={values.lsdAccelFront ?? 20}
-                  min={0}
+                  min={5}
                   max={60}
                   step={1}
                   unit=""
@@ -874,7 +874,7 @@ export function TuneEditor({
                 <StepperRow
                   label="Decel"
                   value={values.lsdDecelFront ?? 15}
-                  min={0}
+                  min={5}
                   max={60}
                   step={1}
                   unit=""
@@ -896,7 +896,7 @@ export function TuneEditor({
                 <StepperRow
                   label="Init"
                   value={values.lsdInitRear ?? 10}
-                  min={0}
+                  min={5}
                   max={60}
                   step={1}
                   unit=""
@@ -911,7 +911,7 @@ export function TuneEditor({
                 <StepperRow
                   label="Accel"
                   value={values.lsdAccelRear ?? 20}
-                  min={0}
+                  min={5}
                   max={60}
                   step={1}
                   unit=""
@@ -926,7 +926,7 @@ export function TuneEditor({
                 <StepperRow
                   label="Decel"
                   value={values.lsdDecelRear ?? 15}
-                  min={0}
+                  min={5}
                   max={60}
                   step={1}
                   unit=""
