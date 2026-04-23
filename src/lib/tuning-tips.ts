@@ -28,6 +28,7 @@ const TIRE_CATEGORY_MAP: Record<string, TireCategory> = {
 // Threshold boundaries: [low.warning, low.info, high.info, high.warning]
 type Thresholds = [number, number, number, number];
 type CategoryThresholds = Record<TireCategory, Thresholds>;
+type DescriptorZone = "low.warning" | "low.info" | "high.info" | "high.warning";
 
 interface ParameterDef {
   thresholds: CategoryThresholds;
@@ -371,6 +372,14 @@ function getDescriptor(
   }
 }
 
+function tipString(
+  label: string,
+  descriptorZone: DescriptorZone,
+  consequence: string,
+): string {
+  return `This ${label} setting is ${getDescriptor(descriptorZone)}, which could result in ${consequence}.`;
+}
+
 function checkParameter(
   value: number,
   thresholds: Thresholds,
@@ -378,32 +387,32 @@ function checkParameter(
 ): TuningTip | null {
   const [lowWarn, lowInfo, highInfo, highWarn] = thresholds;
 
-  if (value < lowWarn) {
+  if (value <= lowWarn) {
     return {
       parameter: "",
       severity: "warning",
-      message: `This ${def.label} setting is ${getDescriptor("low.warning")}, which could result in ${def.lowConsequence}.`,
+      message: tipString(def.label, "low.warning", def.lowConsequence),
     };
   }
-  if (value < lowInfo) {
+  if (value <= lowInfo) {
     return {
       parameter: "",
       severity: "info",
-      message: `This ${def.label} setting is ${getDescriptor("low.info")}, which could result in ${def.lowConsequence}.`,
+      message: tipString(def.label, "low.info", def.lowConsequence),
     };
   }
-  if (value > highWarn) {
+  if (value >= highWarn) {
     return {
       parameter: "",
       severity: "warning",
-      message: `This ${def.label} setting is ${getDescriptor("high.warning")}, which could result in ${def.highConsequence}.`,
+      message: tipString(def.label, "high.warning", def.highConsequence),
     };
   }
-  if (value > highInfo) {
+  if (value >= highInfo) {
     return {
       parameter: "",
       severity: "info",
-      message: `This ${def.label} setting is ${getDescriptor("high.info")}, which could result in ${def.highConsequence}.`,
+      message: tipString(def.label, "high.info", def.highConsequence),
     };
   }
 

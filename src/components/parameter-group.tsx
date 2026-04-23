@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import TipIcon from "@/components/ui/tipIcon";
-import { ChevronDown, AlertTriangle, Info } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ParameterGroupProps {
