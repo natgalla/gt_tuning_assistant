@@ -110,52 +110,58 @@ const PARAMETER_DEFS: Record<string, ParameterDef> = {
     highConsequence: "oversteer from an overloaded rear axle",
   },
   compressionFront: {
+    // Game range: 20–40
     thresholds: {
-      comfort: [5, 10, 40, 50],
-      sport: [5, 8, 45, 52],
-      racing: [3, 5, 50, 55],
-      weather: [5, 10, 35, 45],
-      offroad: [5, 10, 35, 45],
+      comfort: [21, 23, 35, 38],
+      sport: [21, 22, 36, 39],
+      racing: [20, 21, 38, 40],
+      weather: [22, 24, 34, 37],
+      offroad: [22, 24, 34, 37],
     },
     label: "front compression damping",
     lowConsequence: "excessive nose dive under braking",
     highConsequence: "reduced front grip over bumps and kerbs",
   },
   compressionRear: {
+    // Game range: 20–40
     thresholds: {
-      comfort: [5, 10, 40, 50],
-      sport: [5, 8, 45, 52],
-      racing: [3, 5, 50, 55],
-      weather: [5, 10, 35, 45],
-      offroad: [5, 10, 35, 45],
+      comfort: [21, 23, 35, 38],
+      sport: [21, 22, 36, 39],
+      racing: [20, 21, 38, 40],
+      weather: [22, 24, 34, 37],
+      offroad: [22, 24, 34, 37],
     },
     label: "rear compression damping",
     lowConsequence: "excessive squat under acceleration",
     highConsequence: "reduced rear grip over bumps and kerbs",
   },
   expansionFront: {
+    // Game range: 30–50
     thresholds: {
-      comfort: [5, 10, 40, 50],
-      sport: [5, 8, 45, 52],
-      racing: [3, 5, 50, 55],
-      weather: [5, 10, 35, 45],
-      offroad: [5, 10, 35, 45],
+      comfort: [31, 33, 45, 48],
+      sport: [31, 32, 46, 49],
+      racing: [30, 31, 48, 50],
+      weather: [32, 34, 44, 47],
+      offroad: [32, 34, 44, 47],
     },
     label: "front expansion damping",
     lowConsequence: "slow weight transfer and floaty handling",
-    highConsequence: "reduced front grip as the suspension cannot extend quickly",
+    highConsequence:
+      "reduced front grip as the suspension cannot extend quickly",
   },
   expansionRear: {
+    // Game range: 30–50
     thresholds: {
-      comfort: [5, 10, 40, 50],
-      sport: [5, 8, 45, 52],
-      racing: [3, 5, 50, 55],
-      weather: [5, 10, 35, 45],
-      offroad: [5, 10, 35, 45],
+      comfort: [31, 33, 45, 48],
+      sport: [31, 32, 46, 49],
+      racing: [30, 31, 48, 50],
+      weather: [32, 34, 44, 47],
+      offroad: [32, 34, 44, 47],
     },
     label: "rear expansion damping",
     lowConsequence: "slow weight transfer and rear instability on turn-in",
-    highConsequence: "reduced rear grip as the suspension cannot extend quickly",
+    highConsequence:
+      "reduced rear grip as the suspension cannot extend quickly",
   },
   bodyHeightFront: {
     thresholds: {
@@ -207,11 +213,11 @@ const PARAMETER_DEFS: Record<string, ParameterDef> = {
   },
   lsdInitFront: {
     thresholds: {
-      comfort: [0, 3, 30, 45],
-      sport: [0, 3, 35, 50],
-      racing: [0, 3, 40, 55],
-      weather: [0, 3, 25, 40],
-      offroad: [0, 3, 25, 40],
+      comfort: [0, 5, 30, 45],
+      sport: [0, 5, 35, 50],
+      racing: [0, 5, 40, 55],
+      weather: [0, 5, 25, 40],
+      offroad: [0, 5, 25, 40],
     },
     label: "front LSD initial torque",
     lowConsequence: "a lack of traction when one wheel loses grip",
@@ -243,11 +249,11 @@ const PARAMETER_DEFS: Record<string, ParameterDef> = {
   },
   lsdInitRear: {
     thresholds: {
-      comfort: [0, 3, 30, 45],
-      sport: [0, 3, 35, 50],
-      racing: [0, 3, 40, 55],
-      weather: [0, 3, 25, 40],
-      offroad: [0, 3, 25, 40],
+      comfort: [0, 5, 30, 45],
+      sport: [0, 5, 35, 50],
+      racing: [0, 5, 40, 55],
+      weather: [0, 5, 25, 40],
+      offroad: [0, 5, 25, 40],
     },
     label: "rear LSD initial torque",
     lowConsequence: "a lack of traction when one wheel loses grip",
