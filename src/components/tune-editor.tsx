@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { SuspensionSelector } from "@/components/selector";
 import { CarSelector, type CatalogCar } from "@/components/car-selector";
 import { ParameterGroup } from "@/components/parameter-group";
@@ -21,6 +21,7 @@ import { SUSPENSION_ORDER, TIRE_ORDER } from "@/lib/utils";
 import { useAuth } from "@/lib/auth-context";
 import { GT7_TRACKS } from "@/lib/tracks";
 import type { Drivetrain } from "@/lib/tuning-rules";
+import { getTuningTips, type TuningTip } from "@/lib/tuning-tips";
 
 interface TuneConfig {
   id: number;
@@ -315,6 +316,18 @@ export function TuneEditor({
   const effectiveDrivetrain =
     (car?.drivetrain as Drivetrain | undefined) ?? drivetrain;
 
+  const tipsByParam = useMemo(() => {
+    const tips = getTuningTips(values, tireType, effectiveDrivetrain);
+    const map: Record<string, TuningTip> = {};
+    for (const tip of tips) {
+      // Keep first (highest-severity, since sorted warnings-first)
+      if (!map[tip.parameter]) {
+        map[tip.parameter] = tip;
+      }
+    }
+    return map;
+  }, [values, tireType, effectiveDrivetrain]);
+
   const handleRecommendations = useCallback(
     (h: Record<string, "increase" | "decrease">) => setHighlights(h),
     [],
@@ -598,7 +611,11 @@ export function TuneEditor({
       {/* Parameter Groups */}
       <div className="divide-y divide-border border-t border-border">
         {/* Body Height */}
-        <ParameterGroup title="Body Height">
+        <ParameterGroup
+          title="Body Height"
+          discrepancyTip={tipsByParam.discrepancy_bodyHeight?.message}
+          discrepancyTipSeverity={tipsByParam.discrepancy_bodyHeight?.severity}
+        >
           <ParameterSlider
             label=""
             frontValue={values.bodyHeightFront ?? 100}
@@ -614,11 +631,19 @@ export function TuneEditor({
             rearHighlight={highlights.bodyHeightRear}
             onFrontHighlightClear={() => clearHighlight("bodyHeightFront")}
             onRearHighlightClear={() => clearHighlight("bodyHeightRear")}
+            frontTip={tipsByParam.bodyHeightFront?.message}
+            frontTipSeverity={tipsByParam.bodyHeightFront?.severity}
+            rearTip={tipsByParam.bodyHeightRear?.message}
+            rearTipSeverity={tipsByParam.bodyHeightRear?.severity}
           />
         </ParameterGroup>
 
         {/* Natural Frequency */}
-        <ParameterGroup title="Springs / Natural Frequency">
+        <ParameterGroup
+          title="Springs / Natural Frequency"
+          discrepancyTip={tipsByParam.discrepancy_natFreq?.message}
+          discrepancyTipSeverity={tipsByParam.discrepancy_natFreq?.severity}
+        >
           <ParameterSlider
             label=""
             frontValue={values.natFreqFront ?? 2.0}
@@ -635,11 +660,19 @@ export function TuneEditor({
             rearHighlight={highlights.natFreqRear}
             onFrontHighlightClear={() => clearHighlight("natFreqFront")}
             onRearHighlightClear={() => clearHighlight("natFreqRear")}
+            frontTip={tipsByParam.natFreqFront?.message}
+            frontTipSeverity={tipsByParam.natFreqFront?.severity}
+            rearTip={tipsByParam.natFreqRear?.message}
+            rearTipSeverity={tipsByParam.natFreqRear?.severity}
           />
         </ParameterGroup>
 
         {/* Anti-Roll Bars */}
-        <ParameterGroup title="Anti-Roll Bars">
+        <ParameterGroup
+          title="Anti-Roll Bars"
+          discrepancyTip={tipsByParam.discrepancy_antiRoll?.message}
+          discrepancyTipSeverity={tipsByParam.discrepancy_antiRoll?.severity}
+        >
           <ParameterSlider
             label=""
             frontValue={values.antiRollFront ?? 5}
@@ -655,11 +688,19 @@ export function TuneEditor({
             rearHighlight={highlights.antiRollRear}
             onFrontHighlightClear={() => clearHighlight("antiRollFront")}
             onRearHighlightClear={() => clearHighlight("antiRollRear")}
+            frontTip={tipsByParam.antiRollFront?.message}
+            frontTipSeverity={tipsByParam.antiRollFront?.severity}
+            rearTip={tipsByParam.antiRollRear?.message}
+            rearTipSeverity={tipsByParam.antiRollRear?.severity}
           />
         </ParameterGroup>
 
         {/* Damping - Compression */}
-        <ParameterGroup title="Damping Ratio - Compression">
+        <ParameterGroup
+          title="Damping Ratio - Compression"
+          discrepancyTip={tipsByParam.discrepancy_compression?.message}
+          discrepancyTipSeverity={tipsByParam.discrepancy_compression?.severity}
+        >
           <ParameterSlider
             label=""
             frontValue={values.compressionFront ?? 30}
@@ -675,11 +716,19 @@ export function TuneEditor({
             rearHighlight={highlights.compressionRear}
             onFrontHighlightClear={() => clearHighlight("compressionFront")}
             onRearHighlightClear={() => clearHighlight("compressionRear")}
+            frontTip={tipsByParam.compressionFront?.message}
+            frontTipSeverity={tipsByParam.compressionFront?.severity}
+            rearTip={tipsByParam.compressionRear?.message}
+            rearTipSeverity={tipsByParam.compressionRear?.severity}
           />
         </ParameterGroup>
 
         {/* Damping - Expansion */}
-        <ParameterGroup title="Damping Ratio - Expansion">
+        <ParameterGroup
+          title="Damping Ratio - Expansion"
+          discrepancyTip={tipsByParam.discrepancy_expansion?.message}
+          discrepancyTipSeverity={tipsByParam.discrepancy_expansion?.severity}
+        >
           <ParameterSlider
             label=""
             frontValue={values.expansionFront ?? 40}
@@ -695,11 +744,19 @@ export function TuneEditor({
             rearHighlight={highlights.expansionRear}
             onFrontHighlightClear={() => clearHighlight("expansionFront")}
             onRearHighlightClear={() => clearHighlight("expansionRear")}
+            frontTip={tipsByParam.expansionFront?.message}
+            frontTipSeverity={tipsByParam.expansionFront?.severity}
+            rearTip={tipsByParam.expansionRear?.message}
+            rearTipSeverity={tipsByParam.expansionRear?.severity}
           />
         </ParameterGroup>
 
         {/* Camber */}
-        <ParameterGroup title="Camber Angle">
+        <ParameterGroup
+          title="Camber Angle"
+          discrepancyTip={tipsByParam.discrepancy_camber?.message}
+          discrepancyTipSeverity={tipsByParam.discrepancy_camber?.severity}
+        >
           <ParameterSlider
             label=""
             frontValue={values.camberFront ?? 0}
@@ -716,6 +773,10 @@ export function TuneEditor({
             rearHighlight={highlights.camberRear}
             onFrontHighlightClear={() => clearHighlight("camberFront")}
             onRearHighlightClear={() => clearHighlight("camberRear")}
+            frontTip={tipsByParam.camberFront?.message}
+            frontTipSeverity={tipsByParam.camberFront?.severity}
+            rearTip={tipsByParam.camberRear?.message}
+            rearTipSeverity={tipsByParam.camberRear?.severity}
           />
         </ParameterGroup>
 
@@ -748,6 +809,10 @@ export function TuneEditor({
             rearHighlight={highlights.toeRear}
             onFrontHighlightClear={() => clearHighlight("toeFront")}
             onRearHighlightClear={() => clearHighlight("toeRear")}
+            frontTip={tipsByParam.toeFront?.message}
+            frontTipSeverity={tipsByParam.toeFront?.severity}
+            rearTip={tipsByParam.toeRear?.message}
+            rearTipSeverity={tipsByParam.toeRear?.severity}
           />
         </ParameterGroup>
 
@@ -767,6 +832,8 @@ export function TuneEditor({
                 onChange={(v) => updateValue("torqueDistribution", v)}
                 highlight={highlights.torqueDistribution}
                 onHighlightClear={() => clearHighlight("torqueDistribution")}
+                tip={tipsByParam.torqueDistribution?.message}
+                tipSeverity={tipsByParam.torqueDistribution?.severity}
               />
             )}
             {!["FR", "MR", "RR"].includes(effectiveDrivetrain) && (
@@ -786,6 +853,8 @@ export function TuneEditor({
                   onChange={(v) => updateValue("lsdInitFront", v)}
                   highlight={highlights.lsdInitFront}
                   onHighlightClear={() => clearHighlight("lsdInitFront")}
+                  tip={tipsByParam.lsdInitFront?.message}
+                  tipSeverity={tipsByParam.lsdInitFront?.severity}
                 />
                 <StepperRow
                   label="Accel"
@@ -799,6 +868,8 @@ export function TuneEditor({
                   onChange={(v) => updateValue("lsdAccelFront", v)}
                   highlight={highlights.lsdAccelFront}
                   onHighlightClear={() => clearHighlight("lsdAccelFront")}
+                  tip={tipsByParam.lsdAccelFront?.message}
+                  tipSeverity={tipsByParam.lsdAccelFront?.severity}
                 />
                 <StepperRow
                   label="Decel"
@@ -812,6 +883,8 @@ export function TuneEditor({
                   onChange={(v) => updateValue("lsdDecelFront", v)}
                   highlight={highlights.lsdDecelFront}
                   onHighlightClear={() => clearHighlight("lsdDecelFront")}
+                  tip={tipsByParam.lsdDecelFront?.message}
+                  tipSeverity={tipsByParam.lsdDecelFront?.severity}
                 />
               </div>
             )}
@@ -832,6 +905,8 @@ export function TuneEditor({
                   onChange={(v) => updateValue("lsdInitRear", v)}
                   highlight={highlights.lsdInitRear}
                   onHighlightClear={() => clearHighlight("lsdInitRear")}
+                  tip={tipsByParam.lsdInitRear?.message}
+                  tipSeverity={tipsByParam.lsdInitRear?.severity}
                 />
                 <StepperRow
                   label="Accel"
@@ -845,6 +920,8 @@ export function TuneEditor({
                   onChange={(v) => updateValue("lsdAccelRear", v)}
                   highlight={highlights.lsdAccelRear}
                   onHighlightClear={() => clearHighlight("lsdAccelRear")}
+                  tip={tipsByParam.lsdAccelRear?.message}
+                  tipSeverity={tipsByParam.lsdAccelRear?.severity}
                 />
                 <StepperRow
                   label="Decel"
@@ -858,6 +935,8 @@ export function TuneEditor({
                   onChange={(v) => updateValue("lsdDecelRear", v)}
                   highlight={highlights.lsdDecelRear}
                   onHighlightClear={() => clearHighlight("lsdDecelRear")}
+                  tip={tipsByParam.lsdDecelRear?.message}
+                  tipSeverity={tipsByParam.lsdDecelRear?.severity}
                 />
               </div>
             )}

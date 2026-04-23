@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback } from "react";
+import { Popover } from "@base-ui/react/popover";
 import { Button } from "@/components/ui/button";
-import { Minus, Plus } from "lucide-react";
+import { Minus, Plus, AlertTriangle, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ParameterSliderProps {
@@ -21,11 +22,52 @@ interface ParameterSliderProps {
   rearHighlight?: "increase" | "decrease";
   onFrontHighlightClear?: () => void;
   onRearHighlightClear?: () => void;
+  frontTip?: string;
+  frontTipSeverity?: "info" | "warning";
+  rearTip?: string;
+  rearTipSeverity?: "info" | "warning";
 }
 
 function roundToStep(value: number, step: number): number {
   const decimals = step.toString().split(".")[1]?.length ?? 0;
   return parseFloat(value.toFixed(decimals));
+}
+
+function TipIcon({
+  tip,
+  severity,
+}: {
+  tip: string;
+  severity: "info" | "warning";
+}) {
+  const Icon = severity === "warning" ? AlertTriangle : Info;
+  const colorClass =
+    severity === "warning" ? "text-amber-500" : "text-blue-400";
+
+  return (
+    <Popover.Root>
+      <Popover.Trigger
+        className={cn("shrink-0 p-1 rounded-sm", colorClass)}
+        render={<button type="button" />}
+      >
+        <Icon className="h-5 w-5" />
+      </Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Positioner sideOffset={6}>
+          <Popover.Popup
+            className={cn(
+              "max-w-[240px] rounded-lg border bg-popover px-3 py-2 text-xs shadow-md",
+              severity === "warning"
+                ? "text-amber-700 dark:text-amber-400"
+                : "text-blue-700 dark:text-blue-400",
+            )}
+          >
+            {tip}
+          </Popover.Popup>
+        </Popover.Positioner>
+      </Popover.Portal>
+    </Popover.Root>
+  );
 }
 
 export function StepperRow({
@@ -40,6 +82,8 @@ export function StepperRow({
   onChange,
   highlight,
   onHighlightClear,
+  tip,
+  tipSeverity,
 }: {
   label: string;
   value: number;
@@ -52,6 +96,8 @@ export function StepperRow({
   onChange: (v: number) => void;
   highlight?: "increase" | "decrease";
   onHighlightClear?: () => void;
+  tip?: string;
+  tipSeverity?: "info" | "warning";
 }) {
   const decrement = useCallback(() => {
     const next = roundToStep(value - step, step);
@@ -83,10 +129,13 @@ export function StepperRow({
       >
         <Minus className="h-3.5 w-3.5" />
       </Button>
-      <span className={`flex-1 text-center text-sm font-mono tabular-nums ${disabled ? "text-muted-foreground" : ""}`}>
+      <span
+        className={`flex-1 text-center text-sm font-mono tabular-nums ${disabled ? "text-muted-foreground" : ""}`}
+      >
         {formatValue(value)}
         {unit && <span className="text-muted-foreground ml-0.5">{unit}</span>}
       </span>
+      {tip && tipSeverity && <TipIcon tip={tip} severity={tipSeverity} />}
       <Button
         variant="outline"
         size="icon"
@@ -120,6 +169,10 @@ export function ParameterSlider({
   rearHighlight,
   onFrontHighlightClear,
   onRearHighlightClear,
+  frontTip,
+  frontTipSeverity,
+  rearTip,
+  rearTipSeverity,
 }: ParameterSliderProps) {
   const fmt = formatValue ?? ((v: number) => `${v}`);
 
@@ -142,6 +195,8 @@ export function ParameterSlider({
         onChange={onFrontChange}
         highlight={frontHighlight}
         onHighlightClear={onFrontHighlightClear}
+        tip={frontTip}
+        tipSeverity={frontTipSeverity}
       />
       <StepperRow
         label="Rear"
@@ -155,6 +210,8 @@ export function ParameterSlider({
         onChange={onRearChange}
         highlight={rearHighlight}
         onHighlightClear={onRearHighlightClear}
+        tip={rearTip}
+        tipSeverity={rearTipSeverity}
       />
     </div>
   );
