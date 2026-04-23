@@ -75,40 +75,46 @@ export function StepperRow({
   }, [value, step, max, onChange, highlight, onHighlightClear]);
 
   // Horizontal drag to scrub the value
-  const dragRef = useRef<{ x: number; startValue: number } | null>(null);
-  const dragged = useRef(false);
+  const dragRef = useRef<{
+    x: number;
+    startValue: number;
+    lastSet: number;
+  } | null>(null);
 
   const onPointerDown = useCallback(
     (e: React.PointerEvent) => {
       if (disabled) return;
-      (e.target as HTMLElement).setPointerCapture(e.pointerId);
-      dragRef.current = { x: e.clientX, startValue: value };
-      dragged.current = false;
-    },
-    [disabled, value],
-  );
+      e.preventDefault();
+      dragRef.current = { x: e.clientX, startValue: value, lastSet: value };
 
-  const onPointerMove = useCallback(
-    (e: React.PointerEvent) => {
-      const drag = dragRef.current;
-      if (!drag) return;
-      const dx = e.clientX - drag.x;
-      if (Math.abs(dx) < 8) return; // dead zone before scrubbing starts
-      dragged.current = true;
-      const steps = Math.trunc(dx / 16);
-      const next = roundToStep(drag.startValue + steps * step, step);
-      const clamped = Math.min(max, Math.max(min, next));
-      if (clamped !== value) {
-        onChange(clamped);
-        if (onHighlightClear) onHighlightClear();
-      }
-    },
-    [step, min, max, value, onChange, onHighlightClear],
-  );
+      const onMove = (me: PointerEvent) => {
+        const drag = dragRef.current;
+        if (!drag) return;
+        const dx = me.clientX - drag.x;
+        if (Math.abs(dx) < 8) return;
+        const steps = Math.trunc(dx / 16);
+        const next = roundToStep(drag.startValue + steps * step, step);
+        const clamped = Math.min(max, Math.max(min, next));
+        if (clamped !== drag.lastSet) {
+          drag.lastSet = clamped;
+          onChange(clamped);
+          if (onHighlightClear) onHighlightClear();
+        }
+      };
 
-  const onPointerUp = useCallback(() => {
-    dragRef.current = null;
-  }, []);
+      const onUp = () => {
+        dragRef.current = null;
+        window.removeEventListener("pointermove", onMove);
+        window.removeEventListener("pointerup", onUp);
+        window.removeEventListener("pointercancel", onUp);
+      };
+
+      window.addEventListener("pointermove", onMove);
+      window.addEventListener("pointerup", onUp);
+      window.addEventListener("pointercancel", onUp);
+    },
+    [disabled, value, step, min, max, onChange, onHighlightClear],
+  );
 
   return (
     <div className="flex items-center gap-2">
@@ -136,9 +142,6 @@ export function StepperRow({
         )}
         style={{ touchAction: "none" }}
         onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerUp}
       >
         {formatValue(value)}
         {unit && <span className="text-muted-foreground ml-0.5">{unit}</span>}
