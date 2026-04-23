@@ -26,6 +26,7 @@ export function ParameterGroup({
     <div className="border-b border-border">
       <button
         type="button"
+        onClick={() => setOpen(!open)}
         className="flex w-full items-center justify-between py-3 px-1 text-sm font-medium"
       >
         <span className="flex items-center gap-1.5">
@@ -35,7 +36,6 @@ export function ParameterGroup({
           )}
         </span>
         <ChevronDown
-          onClick={() => setOpen(!open)}
           className={cn(
             "h-4 w-4 text-muted-foreground transition-transform",
             open && "rotate-180",
