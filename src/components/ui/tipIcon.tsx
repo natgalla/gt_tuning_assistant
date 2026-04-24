@@ -19,6 +19,7 @@ export default function TipIcon({
     <Popover.Root>
       <Popover.Trigger
         className={cn("shrink-0 p-1 rounded-sm", colorClass)}
+        onClick={(e: React.MouseEvent) => e.stopPropagation()}
         render={<button type="button" />}
       >
         <Icon className="h-5 w-5" />

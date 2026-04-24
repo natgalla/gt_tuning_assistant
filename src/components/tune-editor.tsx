@@ -22,6 +22,11 @@ import { useAuth } from "@/lib/auth-context";
 import { GT7_TRACKS } from "@/lib/tracks";
 import type { Drivetrain } from "@/lib/tuning-rules";
 import { getTuningTips, type TuningTip } from "@/lib/tuning-tips";
+import {
+  getBaseTune,
+  resolveRideHeight,
+  TIRE_CATEGORY_MAP,
+} from "@/lib/base-tunes";
 
 interface TuneConfig {
   id: number;
@@ -260,6 +265,7 @@ export function TuneEditor({
   );
   const [savedTunes, setSavedTunes] = useState<SavedTune[]>(initialSavedTunes);
   const [saving, setSaving] = useState(false);
+  const [baseTuneLoaded, setBaseTuneLoaded] = useState(false);
   const [highlights, setHighlights] = useState<
     Record<string, "increase" | "decrease">
   >({});
@@ -373,6 +379,118 @@ export function TuneEditor({
     }
     setHighlights({});
   }, [currentConfig, isFreehand]);
+
+  const isHAS = suspensionType === "HEIGHT_ADJUSTABLE_SPORT";
+
+  const isBaseTuneActive = useMemo(() => {
+    const category = TIRE_CATEGORY_MAP[tireType];
+    if (!category) return false;
+    const preset = getBaseTune(category, effectiveDrivetrain);
+    if (!preset) return false;
+
+    const bhFrontMin = isFreehand
+      ? FREEHAND_RANGES.bodyHeightFrontMin
+      : (currentConfig?.bodyHeightFrontMin ?? 0);
+    const bhFrontMax = isFreehand
+      ? FREEHAND_RANGES.bodyHeightFrontMax
+      : (currentConfig?.bodyHeightFrontMax ?? 0);
+    const bhRearMin = isFreehand
+      ? FREEHAND_RANGES.bodyHeightRearMin
+      : (currentConfig?.bodyHeightRearMin ?? 0);
+    const bhRearMax = isFreehand
+      ? FREEHAND_RANGES.bodyHeightRearMax
+      : (currentConfig?.bodyHeightRearMax ?? 0);
+
+    return (
+      values.bodyHeightFront ===
+        resolveRideHeight(preset.bodyHeightFrontPct, bhFrontMin, bhFrontMax) &&
+      values.bodyHeightRear ===
+        resolveRideHeight(preset.bodyHeightRearPct, bhRearMin, bhRearMax) &&
+      values.natFreqFront === preset.natFreqFront &&
+      values.natFreqRear === preset.natFreqRear &&
+      values.antiRollFront === (isHAS ? 1 : preset.antiRollFront) &&
+      values.antiRollRear === (isHAS ? 1 : preset.antiRollRear) &&
+      values.compressionFront === preset.compressionFront &&
+      values.compressionRear === preset.compressionRear &&
+      values.expansionFront === preset.expansionFront &&
+      values.expansionRear === preset.expansionRear &&
+      values.camberFront === preset.camberFront &&
+      values.camberRear === preset.camberRear &&
+      values.toeFront === (isHAS ? 0 : preset.toeFront) &&
+      values.toeRear === (isHAS ? 0.2 : preset.toeRear) &&
+      (preset.lsdInitFront == null ||
+        values.lsdInitFront === preset.lsdInitFront) &&
+      (preset.lsdAccelFront == null ||
+        values.lsdAccelFront === preset.lsdAccelFront) &&
+      (preset.lsdDecelFront == null ||
+        values.lsdDecelFront === preset.lsdDecelFront) &&
+      (preset.lsdInitRear == null ||
+        values.lsdInitRear === preset.lsdInitRear) &&
+      (preset.lsdAccelRear == null ||
+        values.lsdAccelRear === preset.lsdAccelRear) &&
+      (preset.lsdDecelRear == null ||
+        values.lsdDecelRear === preset.lsdDecelRear) &&
+      (preset.torqueDistribution == null ||
+        values.torqueDistribution === preset.torqueDistribution)
+    );
+  }, [values, tireType, effectiveDrivetrain, isFreehand, currentConfig, isHAS]);
+
+  const loadBaseTune = useCallback(() => {
+    const category = TIRE_CATEGORY_MAP[tireType];
+    if (!category) return;
+    const preset = getBaseTune(category, effectiveDrivetrain);
+    if (!preset) return;
+
+    const bhFrontMin = isFreehand
+      ? FREEHAND_RANGES.bodyHeightFrontMin
+      : (currentConfig?.bodyHeightFrontMin ?? 0);
+    const bhFrontMax = isFreehand
+      ? FREEHAND_RANGES.bodyHeightFrontMax
+      : (currentConfig?.bodyHeightFrontMax ?? 0);
+    const bhRearMin = isFreehand
+      ? FREEHAND_RANGES.bodyHeightRearMin
+      : (currentConfig?.bodyHeightRearMin ?? 0);
+    const bhRearMax = isFreehand
+      ? FREEHAND_RANGES.bodyHeightRearMax
+      : (currentConfig?.bodyHeightRearMax ?? 0);
+
+    setValues((prev) => ({
+      ...prev,
+      bodyHeightFront: resolveRideHeight(
+        preset.bodyHeightFrontPct,
+        bhFrontMin,
+        bhFrontMax,
+      ),
+      bodyHeightRear: resolveRideHeight(
+        preset.bodyHeightRearPct,
+        bhRearMin,
+        bhRearMax,
+      ),
+      natFreqFront: preset.natFreqFront,
+      natFreqRear: preset.natFreqRear,
+      antiRollFront: isHAS ? 1 : preset.antiRollFront,
+      antiRollRear: isHAS ? 1 : preset.antiRollRear,
+      compressionFront: preset.compressionFront,
+      compressionRear: preset.compressionRear,
+      expansionFront: preset.expansionFront,
+      expansionRear: preset.expansionRear,
+      camberFront: preset.camberFront,
+      camberRear: preset.camberRear,
+      toeFront: isHAS ? 0 : preset.toeFront,
+      toeRear: isHAS ? 0.2 : preset.toeRear,
+      lsdInitFront: preset.lsdInitFront ?? prev.lsdInitFront,
+      lsdAccelFront: preset.lsdAccelFront ?? prev.lsdAccelFront,
+      lsdDecelFront: preset.lsdDecelFront ?? prev.lsdDecelFront,
+      lsdInitRear: preset.lsdInitRear ?? prev.lsdInitRear,
+      lsdAccelRear: preset.lsdAccelRear ?? prev.lsdAccelRear,
+      lsdDecelRear: preset.lsdDecelRear ?? prev.lsdDecelRear,
+      torqueDistribution:
+        preset.torqueDistribution ?? prev.torqueDistribution,
+    }));
+    setHighlights({});
+    setBaseTuneLoaded(true);
+    setTimeout(() => setBaseTuneLoaded(false), 1500);
+  }, [tireType, effectiveDrivetrain, isFreehand, currentConfig, isHAS]);
 
   const getRange = (param: string, side: "Min" | "Max") => {
     const key = `${param}${side}` as keyof typeof FREEHAND_RANGES;
@@ -534,6 +652,18 @@ export function TuneEditor({
           orderArray={SUSPENSION_ORDER}
           onChange={handleSuspensionChange}
         />
+      </div>
+
+      {/* Load Base Tune */}
+      <div className="mb-4">
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={loadBaseTune}
+          disabled={isBaseTuneActive}
+        >
+          {baseTuneLoaded ? "Base Tune Loaded!" : "Load Base Tune"}
+        </Button>
       </div>
 
       {/* Track Selector */}

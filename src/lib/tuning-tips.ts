@@ -40,7 +40,7 @@ interface ParameterDef {
 const PARAMETER_DEFS: Record<string, ParameterDef> = {
   camberFront: {
     thresholds: {
-      comfort: [0.5, 1.0, 2.5, 3.5],
+      comfort: [0.4, 1.0, 2.5, 3.5],
       sport: [0.3, 0.8, 3.0, 4.0],
       racing: [0.3, 0.5, 3.5, 4.5],
       weather: [0.5, 1.0, 2.0, 3.0],
@@ -52,7 +52,7 @@ const PARAMETER_DEFS: Record<string, ParameterDef> = {
   },
   camberRear: {
     thresholds: {
-      comfort: [0.5, 1.0, 2.5, 3.5],
+      comfort: [0.4, 1.0, 2.5, 3.5],
       sport: [0.3, 0.8, 3.0, 4.0],
       racing: [0.3, 0.5, 3.5, 4.5],
       weather: [0.5, 1.0, 2.0, 3.0],
@@ -64,7 +64,7 @@ const PARAMETER_DEFS: Record<string, ParameterDef> = {
   },
   natFreqFront: {
     thresholds: {
-      comfort: [1.2, 1.5, 2.8, 3.5],
+      comfort: [1.2, 1.4, 2.8, 3.5],
       sport: [1.0, 1.3, 3.2, 4.0],
       racing: [0.8, 1.0, 3.8, 4.5],
       weather: [1.2, 1.5, 2.5, 3.0],
@@ -76,7 +76,7 @@ const PARAMETER_DEFS: Record<string, ParameterDef> = {
   },
   natFreqRear: {
     thresholds: {
-      comfort: [1.2, 1.5, 2.8, 3.5],
+      comfort: [1.2, 1.4, 2.8, 3.5],
       sport: [1.0, 1.3, 3.2, 4.0],
       racing: [0.8, 1.0, 3.8, 4.5],
       weather: [1.2, 1.5, 2.5, 3.0],
@@ -88,8 +88,8 @@ const PARAMETER_DEFS: Record<string, ParameterDef> = {
   },
   antiRollFront: {
     thresholds: {
-      comfort: [2, 3, 7, 9],
-      sport: [2, 2, 8, 9],
+      comfort: [0, 1, 7, 9],
+      sport: [1, 2, 8, 9],
       racing: [1, 2, 9, 10],
       weather: [2, 3, 6, 8],
       offroad: [2, 3, 6, 8],
@@ -100,8 +100,8 @@ const PARAMETER_DEFS: Record<string, ParameterDef> = {
   },
   antiRollRear: {
     thresholds: {
-      comfort: [2, 3, 7, 9],
-      sport: [2, 2, 8, 9],
+      comfort: [0, 1, 7, 9],
+      sport: [1, 2, 8, 9],
       racing: [1, 2, 9, 10],
       weather: [2, 3, 6, 8],
       offroad: [2, 3, 6, 8],
@@ -139,7 +139,7 @@ const PARAMETER_DEFS: Record<string, ParameterDef> = {
   expansionFront: {
     // Game range: 30–50
     thresholds: {
-      comfort: [31, 33, 45, 48],
+      comfort: [31, 32, 45, 48],
       sport: [31, 32, 46, 49],
       racing: [30, 31, 48, 50],
       weather: [32, 34, 44, 47],
@@ -153,7 +153,7 @@ const PARAMETER_DEFS: Record<string, ParameterDef> = {
   expansionRear: {
     // Game range: 30–50
     thresholds: {
-      comfort: [31, 33, 45, 48],
+      comfort: [31, 32, 45, 48],
       sport: [31, 32, 46, 49],
       racing: [30, 31, 48, 50],
       weather: [32, 34, 44, 47],
