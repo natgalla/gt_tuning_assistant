@@ -357,11 +357,25 @@ export function TuneEditor({
         setValues(getDefaults(configMap[type]));
       }
       if (type === "HEIGHT_ADJUSTABLE_SPORT") {
-        setValues((prev) => ({ ...prev, toeFront: 0, toeRear: 0.2 }));
+        setValues((prev) => ({
+          ...prev,
+          antiRollFront: 1,
+          antiRollRear: 1,
+          toeFront: 0,
+          toeRear: 0.2,
+        }));
+      } else if (isFreehand && suspensionType === "HEIGHT_ADJUSTABLE_SPORT") {
+        setValues((prev) => ({
+          ...prev,
+          antiRollFront: FREEHAND_DEFAULTS.antiRollFront,
+          antiRollRear: FREEHAND_DEFAULTS.antiRollRear,
+          toeFront: FREEHAND_DEFAULTS.toeFront,
+          toeRear: FREEHAND_DEFAULTS.toeRear,
+        }));
       }
       setHighlights({});
     },
-    [configMap, isFreehand],
+    [configMap, isFreehand, suspensionType],
   );
 
   const updateValue = useCallback((key: keyof TuneValues, val: number) => {
@@ -800,28 +814,28 @@ export function TuneEditor({
         {/* Anti-Roll Bars */}
         <ParameterGroup
           title="Anti-Roll Bars"
-          discrepancyTip={tipsByParam.discrepancy_antiRoll?.message}
-          discrepancyTipSeverity={tipsByParam.discrepancy_antiRoll?.severity}
+          discrepancyTip={isHAS ? undefined : tipsByParam.discrepancy_antiRoll?.message}
+          discrepancyTipSeverity={isHAS ? undefined : tipsByParam.discrepancy_antiRoll?.severity}
         >
           <ParameterSlider
             label=""
-            frontValue={values.antiRollFront ?? 5}
-            rearValue={values.antiRollRear ?? 3}
+            frontValue={isHAS ? 1 : (values.antiRollFront ?? 5)}
+            rearValue={isHAS ? 1 : (values.antiRollRear ?? 3)}
             min={getRange("antiRollFront", "Min")}
             max={getRange("antiRollFront", "Max")}
             step={1}
             unit=""
-            disabled={!isAdjustable("antiRollFrontMin")}
+            disabled={isHAS || !isAdjustable("antiRollFrontMin")}
             onFrontChange={(v) => updateValue("antiRollFront", v)}
             onRearChange={(v) => updateValue("antiRollRear", v)}
             frontHighlight={highlights.antiRollFront}
             rearHighlight={highlights.antiRollRear}
             onFrontHighlightClear={() => clearHighlight("antiRollFront")}
             onRearHighlightClear={() => clearHighlight("antiRollRear")}
-            frontTip={tipsByParam.antiRollFront?.message}
-            frontTipSeverity={tipsByParam.antiRollFront?.severity}
-            rearTip={tipsByParam.antiRollRear?.message}
-            rearTipSeverity={tipsByParam.antiRollRear?.severity}
+            frontTip={isHAS ? undefined : tipsByParam.antiRollFront?.message}
+            frontTipSeverity={isHAS ? undefined : tipsByParam.antiRollFront?.severity}
+            rearTip={isHAS ? undefined : tipsByParam.antiRollRear?.message}
+            rearTipSeverity={isHAS ? undefined : tipsByParam.antiRollRear?.severity}
           />
         </ParameterGroup>
 
@@ -914,24 +928,13 @@ export function TuneEditor({
         <ParameterGroup title="Toe Angle">
           <ParameterSlider
             label=""
-            frontValue={
-              suspensionType === "HEIGHT_ADJUSTABLE_SPORT"
-                ? 0
-                : (values.toeFront ?? 0)
-            }
-            rearValue={
-              suspensionType === "HEIGHT_ADJUSTABLE_SPORT"
-                ? 0.2
-                : (values.toeRear ?? 0)
-            }
+            frontValue={isHAS ? 0 : (values.toeFront ?? 0)}
+            rearValue={isHAS ? 0.2 : (values.toeRear ?? 0)}
             min={getRange("toeFront", "Min")}
             max={getRange("toeFront", "Max")}
             step={0.01}
             unit={"\u00B0"}
-            disabled={
-              suspensionType === "HEIGHT_ADJUSTABLE_SPORT" ||
-              !isAdjustable("toeFrontMin")
-            }
+            disabled={isHAS || !isAdjustable("toeFrontMin")}
             formatValue={(v) => (v >= 0 ? `+${v.toFixed(2)}` : v.toFixed(2))}
             onFrontChange={(v) => updateValue("toeFront", v)}
             onRearChange={(v) => updateValue("toeRear", v)}
@@ -939,10 +942,10 @@ export function TuneEditor({
             rearHighlight={highlights.toeRear}
             onFrontHighlightClear={() => clearHighlight("toeFront")}
             onRearHighlightClear={() => clearHighlight("toeRear")}
-            frontTip={tipsByParam.toeFront?.message}
-            frontTipSeverity={tipsByParam.toeFront?.severity}
-            rearTip={tipsByParam.toeRear?.message}
-            rearTipSeverity={tipsByParam.toeRear?.severity}
+            frontTip={isHAS ? undefined : tipsByParam.toeFront?.message}
+            frontTipSeverity={isHAS ? undefined : tipsByParam.toeFront?.severity}
+            rearTip={isHAS ? undefined : tipsByParam.toeRear?.message}
+            rearTipSeverity={isHAS ? undefined : tipsByParam.toeRear?.severity}
           />
         </ParameterGroup>
 
