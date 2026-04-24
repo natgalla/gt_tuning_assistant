@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import TipIcon from "@/components/ui/tipIcon";
 import { Button } from "@/components/ui/button";
 import { Minus, Plus } from "lucide-react";
@@ -74,6 +74,48 @@ export function StepperRow({
     if (highlight === "increase" && onHighlightClear) onHighlightClear();
   }, [value, step, max, onChange, highlight, onHighlightClear]);
 
+  // Horizontal drag to scrub the value
+  const dragRef = useRef<{
+    x: number;
+    startValue: number;
+    lastSet: number;
+  } | null>(null);
+
+  const onPointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      if (disabled) return;
+      e.preventDefault();
+      dragRef.current = { x: e.clientX, startValue: value, lastSet: value };
+
+      const onMove = (me: PointerEvent) => {
+        const drag = dragRef.current;
+        if (!drag) return;
+        const dx = me.clientX - drag.x;
+        if (Math.abs(dx) < 8) return;
+        const steps = Math.trunc(dx / 16);
+        const next = roundToStep(drag.startValue + steps * step, step);
+        const clamped = Math.min(max, Math.max(min, next));
+        if (clamped !== drag.lastSet) {
+          drag.lastSet = clamped;
+          onChange(clamped);
+          if (onHighlightClear) onHighlightClear();
+        }
+      };
+
+      const onUp = () => {
+        dragRef.current = null;
+        window.removeEventListener("pointermove", onMove);
+        window.removeEventListener("pointerup", onUp);
+        window.removeEventListener("pointercancel", onUp);
+      };
+
+      window.addEventListener("pointermove", onMove);
+      window.addEventListener("pointerup", onUp);
+      window.addEventListener("pointercancel", onUp);
+    },
+    [disabled, value, step, min, max, onChange, onHighlightClear],
+  );
+
   return (
     <div className="flex items-center gap-2">
       <span className="text-xs text-muted-foreground w-10 text-right shrink-0">
@@ -93,7 +135,13 @@ export function StepperRow({
         <Minus className="h-3.5 w-3.5" />
       </Button>
       <span
-        className={`flex-1 text-center text-sm font-mono tabular-nums ${disabled ? "text-muted-foreground" : ""} ${tip && tipSeverity && "-mr-10"}`}
+        className={cn(
+          "flex-1 text-center text-sm font-mono tabular-nums select-none",
+          disabled ? "text-muted-foreground" : "cursor-ew-resize",
+          tip && tipSeverity && "-mr-10",
+        )}
+        style={{ touchAction: "none" }}
+        onPointerDown={onPointerDown}
       >
         {formatValue(value)}
         {unit && <span className="text-muted-foreground ml-0.5">{unit}</span>}
