@@ -24,10 +24,17 @@ export function ParameterGroup({
 
   return (
     <div className="border-b border-border">
-      <button
-        type="button"
+      <div
+        role="button"
+        tabIndex={0}
         onClick={() => setOpen(!open)}
-        className="flex w-full items-center justify-between py-3 px-1 text-sm font-medium"
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setOpen(!open);
+          }
+        }}
+        className="flex w-full items-center justify-between py-3 px-1 text-sm font-medium cursor-pointer"
       >
         <span className="flex items-center gap-1.5">
           {title}
@@ -41,7 +48,7 @@ export function ParameterGroup({
             open && "rotate-180",
           )}
         />
-      </button>
+      </div>
       {open && <div className="pb-4 px-1">{children}</div>}
     </div>
   );

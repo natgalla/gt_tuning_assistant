@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import type { SavedTune } from "@/components/tune-editor";
 import { Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const SUSPENSION_LABELS: Record<string, string> = {
   STOCK: "Stock",
@@ -29,6 +29,12 @@ interface SavedTunesSheetProps {
 
 export function SavedTunesSheet({ tunes, onLoad, onDelete, disabled }: SavedTunesSheetProps) {
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const handler = () => setOpen(true);
+    window.addEventListener("custom:open-saved-tunes", handler);
+    return () => window.removeEventListener("custom:open-saved-tunes", handler);
+  }, []);
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
