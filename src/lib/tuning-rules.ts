@@ -8,7 +8,13 @@ export type CornerSpeed = "low" | "medium" | "high";
 export type ThrottleState = "on-throttle" | "off-throttle" | "braking";
 export type Elevation = "up" | "down" | "neutral";
 
-type Direction = "increase" | "decrease";
+export type Direction = "increase" | "decrease";
+
+export interface Recommendation {
+  parameter: string;
+  direction: Direction;
+  score: number; // 0–4, higher = more specific match
+}
 
 export type Drivetrain = "FR" | "FF" | "MR" | "RR" | "4WD";
 
@@ -632,6 +638,21 @@ const RULES: Rule[] = [
   },
 ];
 
+function scoreRule(
+  rule: Rule,
+  speed: CornerSpeed | null,
+  throttle: ThrottleState | null,
+  elevation: Elevation | null,
+  drivetrain?: Drivetrain,
+): number {
+  let score = 0;
+  if (rule.speed && rule.speed === speed) score++;
+  if (rule.throttle && rule.throttle === throttle) score++;
+  if (rule.elevation && rule.elevation === elevation) score++;
+  if (rule.drivetrain && rule.drivetrain === drivetrain) score++;
+  return score;
+}
+
 export function getRecommendations(
   symptom: Symptom,
   phase: Phase | null,
@@ -639,7 +660,7 @@ export function getRecommendations(
   throttle: ThrottleState | null,
   elevation: Elevation | null,
   drivetrain?: Drivetrain,
-): Record<string, Direction> {
+): Recommendation[] {
   const excludeParams = new Set<string>();
   if (drivetrain !== "4WD") excludeParams.add("torqueDistribution");
   if (drivetrain === "FR" || drivetrain === "MR" || drivetrain === "RR") {
@@ -654,8 +675,8 @@ export function getRecommendations(
   }
 
   if (phase) {
-    // Specific phase: collect all matching rules directly
-    const result: Record<string, Direction> = {};
+    // Specific phase: collect all matching rules, keep highest score per parameter
+    const best = new Map<string, Recommendation>();
     for (const rule of RULES) {
       if (rule.phase !== phase) continue;
       if (excludeParams.has(rule.parameter)) continue;
@@ -664,13 +685,26 @@ export function getRecommendations(
       if (rule.throttle && rule.throttle !== throttle) continue;
       if (rule.elevation && rule.elevation !== elevation) continue;
       if (rule.drivetrain && rule.drivetrain !== drivetrain) continue;
-      result[rule.parameter] = rule.direction;
+
+      const s = scoreRule(rule, speed, throttle, elevation, drivetrain);
+      const existing = best.get(rule.parameter);
+      if (!existing || s > existing.score) {
+        best.set(rule.parameter, {
+          parameter: rule.parameter,
+          direction: rule.direction,
+          score: s,
+        });
+      }
     }
-    return result;
+    return sortRecommendations(best);
   }
 
   // Any phase: collect from all phases, keep only parameters with consistent direction
-  const seen = new Map<string, { direction: Direction; conflict: boolean }>();
+  // For consistent parameters, use the maximum score seen across phases
+  const seen = new Map<
+    string,
+    { direction: Direction; score: number; conflict: boolean }
+  >();
   for (const rule of RULES) {
     if (excludeParams.has(rule.parameter)) continue;
     if (rule.symptom !== symptom) continue;
@@ -679,17 +713,30 @@ export function getRecommendations(
     if (rule.elevation && rule.elevation !== elevation) continue;
     if (rule.drivetrain && rule.drivetrain !== drivetrain) continue;
 
+    const s = scoreRule(rule, speed, throttle, elevation, drivetrain);
     const entry = seen.get(rule.parameter);
     if (!entry) {
-      seen.set(rule.parameter, { direction: rule.direction, conflict: false });
+      seen.set(rule.parameter, { direction: rule.direction, score: s, conflict: false });
     } else if (entry.direction !== rule.direction) {
       entry.conflict = true;
+    } else if (s > entry.score) {
+      entry.score = s;
     }
   }
 
-  const result: Record<string, Direction> = {};
-  for (const [param, { direction, conflict }] of seen) {
-    if (!conflict) result[param] = direction;
+  const best = new Map<string, Recommendation>();
+  for (const [param, { direction, score, conflict }] of seen) {
+    if (!conflict) {
+      best.set(param, { parameter: param, direction, score });
+    }
   }
-  return result;
+  return sortRecommendations(best);
+}
+
+function sortRecommendations(
+  map: Map<string, Recommendation>,
+): Recommendation[] {
+  return Array.from(map.values()).sort(
+    (a, b) => b.score - a.score || a.parameter.localeCompare(b.parameter),
+  );
 }

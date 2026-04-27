@@ -6,10 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+export interface HighlightInfo {
+  direction: "increase" | "decrease";
+  score: number;
+}
+
 interface ParameterSliderProps {
   label: string;
   frontValue: number;
-  rearValue: number;
+  rearValue?: number;
   min: number;
   max: number;
   step: number;
@@ -17,9 +22,9 @@ interface ParameterSliderProps {
   disabled?: boolean;
   formatValue?: (value: number) => string;
   onFrontChange: (value: number) => void;
-  onRearChange: (value: number) => void;
-  frontHighlight?: "increase" | "decrease";
-  rearHighlight?: "increase" | "decrease";
+  onRearChange?: (value: number) => void;
+  frontHighlight?: HighlightInfo;
+  rearHighlight?: HighlightInfo;
   onFrontHighlightClear?: () => void;
   onRearHighlightClear?: () => void;
   frontTip?: string;
@@ -28,12 +33,24 @@ interface ParameterSliderProps {
   rearTipSeverity?: "info" | "warning";
 }
 
+const SCORE_BORDER: Record<number, string> = {
+  0: "",
+  1: "border-2",
+  2: "border-[3px]",
+  3: "border-4",
+  4: "border-4",
+};
+
+function borderForScore(score: number): string {
+  return SCORE_BORDER[Math.min(score, 4)] ?? "";
+}
+
 function roundToStep(value: number, step: number): number {
   const decimals = step.toString().split(".")[1]?.length ?? 0;
   return parseFloat(value.toFixed(decimals));
 }
 
-export function StepperRow({
+function StepperRow({
   label,
   value,
   min,
@@ -57,7 +74,7 @@ export function StepperRow({
   disabled: boolean;
   formatValue: (v: number) => string;
   onChange: (v: number) => void;
-  highlight?: "increase" | "decrease";
+  highlight?: HighlightInfo;
   onHighlightClear?: () => void;
   tip?: string;
   tipSeverity?: "info" | "warning";
@@ -65,13 +82,13 @@ export function StepperRow({
   const decrement = useCallback(() => {
     const next = roundToStep(value - step, step);
     if (next >= min) onChange(next);
-    if (highlight === "decrease" && onHighlightClear) onHighlightClear();
+    if (highlight?.direction === "decrease" && onHighlightClear) onHighlightClear();
   }, [value, step, min, onChange, highlight, onHighlightClear]);
 
   const increment = useCallback(() => {
     const next = roundToStep(value + step, step);
     if (next <= max) onChange(next);
-    if (highlight === "increase" && onHighlightClear) onHighlightClear();
+    if (highlight?.direction === "increase" && onHighlightClear) onHighlightClear();
   }, [value, step, max, onChange, highlight, onHighlightClear]);
 
   // Horizontal drag to scrub the value
@@ -126,8 +143,9 @@ export function StepperRow({
         size="icon"
         className={cn(
           "h-9 w-9 shrink-0",
-          highlight === "decrease" &&
+          highlight?.direction === "decrease" &&
             "border-red-500 bg-red-500/10 text-red-600",
+          highlight?.direction === "decrease" && borderForScore(highlight.score),
         )}
         disabled={disabled || value <= min}
         onClick={decrement}
@@ -152,8 +170,9 @@ export function StepperRow({
         size="icon"
         className={cn(
           "h-9 w-9 shrink-0",
-          highlight === "increase" &&
+          highlight?.direction === "increase" &&
             "border-green-500 bg-green-500/10 text-green-600",
+          highlight?.direction === "increase" && borderForScore(highlight.score),
         )}
         disabled={disabled || value >= max}
         onClick={increment}
@@ -187,6 +206,26 @@ export function ParameterSlider({
 }: ParameterSliderProps) {
   const fmt = formatValue ?? ((v: number) => `${v}`);
 
+  if (onRearChange === undefined) {
+    return (
+      <StepperRow
+        label={label}
+        value={frontValue}
+        min={min}
+        max={max}
+        step={step}
+        unit={unit}
+        disabled={disabled}
+        formatValue={fmt}
+        onChange={onFrontChange}
+        highlight={frontHighlight}
+        onHighlightClear={onFrontHighlightClear}
+        tip={frontTip}
+        tipSeverity={frontTipSeverity}
+      />
+    );
+  }
+
   return (
     <div className="space-y-2">
       {label && (
@@ -211,7 +250,7 @@ export function ParameterSlider({
       />
       <StepperRow
         label="Rear"
-        value={rearValue}
+        value={rearValue!}
         min={min}
         max={max}
         step={step}

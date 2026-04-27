@@ -4,7 +4,10 @@ import { useState, useCallback, useEffect, useMemo } from "react";
 import { SuspensionSelector } from "@/components/selector";
 import { CarSelector, type CatalogCar } from "@/components/car-selector";
 import { ParameterGroup } from "@/components/parameter-group";
-import { ParameterSlider, StepperRow } from "@/components/parameter-slider";
+import {
+  ParameterSlider,
+  type HighlightInfo,
+} from "@/components/parameter-slider";
 import { SavedTunesSheet } from "@/components/saved-tunes-sheet";
 import { TuningAdvisor } from "@/components/tuning-advisor";
 import { Button } from "@/components/ui/button";
@@ -20,7 +23,7 @@ import {
 import { SUSPENSION_ORDER, TIRE_ORDER } from "@/lib/utils";
 import { useAuth } from "@/lib/auth-context";
 import { GT7_TRACKS } from "@/lib/tracks";
-import type { Drivetrain } from "@/lib/tuning-rules";
+import type { Drivetrain, Recommendation } from "@/lib/tuning-rules";
 import { getTuningTips, type TuningTip } from "@/lib/tuning-tips";
 import {
   getBaseTune,
@@ -266,9 +269,9 @@ export function TuneEditor({
   const [savedTunes, setSavedTunes] = useState<SavedTune[]>(initialSavedTunes);
   const [saving, setSaving] = useState(false);
   const [baseTuneLoaded, setBaseTuneLoaded] = useState(false);
-  const [highlights, setHighlights] = useState<
-    Record<string, "increase" | "decrease">
-  >({});
+  const [highlights, setHighlights] = useState<Record<string, HighlightInfo>>(
+    {},
+  );
 
   // Save dialog state
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
@@ -334,10 +337,12 @@ export function TuneEditor({
     return map;
   }, [values, tireType, effectiveDrivetrain]);
 
-  const handleRecommendations = useCallback(
-    (h: Record<string, "increase" | "decrease">) => setHighlights(h),
-    [],
-  );
+  const handleRecommendations = useCallback((recs: Recommendation[]) => {
+    const h: Record<string, HighlightInfo> = {};
+    for (const r of recs)
+      h[r.parameter] = { direction: r.direction, score: r.score };
+    setHighlights(h);
+  }, []);
   const handleDismissRecommendations = useCallback(() => setHighlights({}), []);
   const clearHighlight = useCallback(
     (param: string) =>
@@ -966,50 +971,50 @@ export function TuneEditor({
                 <p className="text-xs font-medium text-muted-foreground">
                   Front
                 </p>
-                <StepperRow
+                <ParameterSlider
                   label="Init"
-                  value={values.lsdInitFront ?? 10}
+                  frontValue={values.lsdInitFront ?? 10}
                   min={5}
                   max={60}
                   step={1}
                   unit=""
                   disabled={false}
                   formatValue={(v) => `${v}`}
-                  onChange={(v) => updateValue("lsdInitFront", v)}
-                  highlight={highlights.lsdInitFront}
-                  onHighlightClear={() => clearHighlight("lsdInitFront")}
-                  tip={tipsByParam.lsdInitFront?.message}
-                  tipSeverity={tipsByParam.lsdInitFront?.severity}
+                  onFrontChange={(v) => updateValue("lsdInitFront", v)}
+                  frontHighlight={highlights.lsdInitFront}
+                  onFrontHighlightClear={() => clearHighlight("lsdInitFront")}
+                  frontTip={tipsByParam.lsdInitFront?.message}
+                  frontTipSeverity={tipsByParam.lsdInitFront?.severity}
                 />
-                <StepperRow
+                <ParameterSlider
                   label="Accel"
-                  value={values.lsdAccelFront ?? 20}
+                  frontValue={values.lsdAccelFront ?? 20}
                   min={5}
                   max={60}
                   step={1}
                   unit=""
                   disabled={false}
                   formatValue={(v) => `${v}`}
-                  onChange={(v) => updateValue("lsdAccelFront", v)}
-                  highlight={highlights.lsdAccelFront}
-                  onHighlightClear={() => clearHighlight("lsdAccelFront")}
-                  tip={tipsByParam.lsdAccelFront?.message}
-                  tipSeverity={tipsByParam.lsdAccelFront?.severity}
+                  onFrontChange={(v) => updateValue("lsdAccelFront", v)}
+                  frontHighlight={highlights.lsdAccelFront}
+                  onFrontHighlightClear={() => clearHighlight("lsdAccelFront")}
+                  frontTip={tipsByParam.lsdAccelFront?.message}
+                  frontTipSeverity={tipsByParam.lsdAccelFront?.severity}
                 />
-                <StepperRow
+                <ParameterSlider
                   label="Decel"
-                  value={values.lsdDecelFront ?? 15}
+                  frontValue={values.lsdDecelFront ?? 15}
                   min={5}
                   max={60}
                   step={1}
                   unit=""
                   disabled={false}
                   formatValue={(v) => `${v}`}
-                  onChange={(v) => updateValue("lsdDecelFront", v)}
-                  highlight={highlights.lsdDecelFront}
-                  onHighlightClear={() => clearHighlight("lsdDecelFront")}
-                  tip={tipsByParam.lsdDecelFront?.message}
-                  tipSeverity={tipsByParam.lsdDecelFront?.severity}
+                  onFrontChange={(v) => updateValue("lsdDecelFront", v)}
+                  frontHighlight={highlights.lsdDecelFront}
+                  onFrontHighlightClear={() => clearHighlight("lsdDecelFront")}
+                  frontTip={tipsByParam.lsdDecelFront?.message}
+                  frontTipSeverity={tipsByParam.lsdDecelFront?.severity}
                 />
               </div>
             )}
@@ -1018,68 +1023,68 @@ export function TuneEditor({
                 <p className="text-xs font-medium text-muted-foreground">
                   Rear
                 </p>
-                <StepperRow
+                <ParameterSlider
                   label="Init"
-                  value={values.lsdInitRear ?? 10}
+                  frontValue={values.lsdInitRear ?? 10}
                   min={5}
                   max={60}
                   step={1}
                   unit=""
                   disabled={false}
                   formatValue={(v) => `${v}`}
-                  onChange={(v) => updateValue("lsdInitRear", v)}
-                  highlight={highlights.lsdInitRear}
-                  onHighlightClear={() => clearHighlight("lsdInitRear")}
-                  tip={tipsByParam.lsdInitRear?.message}
-                  tipSeverity={tipsByParam.lsdInitRear?.severity}
+                  onFrontChange={(v) => updateValue("lsdInitRear", v)}
+                  frontHighlight={highlights.lsdInitRear}
+                  onFrontHighlightClear={() => clearHighlight("lsdInitRear")}
+                  frontTip={tipsByParam.lsdInitRear?.message}
+                  frontTipSeverity={tipsByParam.lsdInitRear?.severity}
                 />
-                <StepperRow
+                <ParameterSlider
                   label="Accel"
-                  value={values.lsdAccelRear ?? 20}
+                  frontValue={values.lsdAccelRear ?? 20}
                   min={5}
                   max={60}
                   step={1}
                   unit=""
                   disabled={false}
                   formatValue={(v) => `${v}`}
-                  onChange={(v) => updateValue("lsdAccelRear", v)}
-                  highlight={highlights.lsdAccelRear}
-                  onHighlightClear={() => clearHighlight("lsdAccelRear")}
-                  tip={tipsByParam.lsdAccelRear?.message}
-                  tipSeverity={tipsByParam.lsdAccelRear?.severity}
+                  onFrontChange={(v) => updateValue("lsdAccelRear", v)}
+                  frontHighlight={highlights.lsdAccelRear}
+                  onFrontHighlightClear={() => clearHighlight("lsdAccelRear")}
+                  frontTip={tipsByParam.lsdAccelRear?.message}
+                  frontTipSeverity={tipsByParam.lsdAccelRear?.severity}
                 />
-                <StepperRow
+                <ParameterSlider
                   label="Decel"
-                  value={values.lsdDecelRear ?? 15}
+                  frontValue={values.lsdDecelRear ?? 15}
                   min={5}
                   max={60}
                   step={1}
                   unit=""
                   disabled={false}
                   formatValue={(v) => `${v}`}
-                  onChange={(v) => updateValue("lsdDecelRear", v)}
-                  highlight={highlights.lsdDecelRear}
-                  onHighlightClear={() => clearHighlight("lsdDecelRear")}
-                  tip={tipsByParam.lsdDecelRear?.message}
-                  tipSeverity={tipsByParam.lsdDecelRear?.severity}
+                  onFrontChange={(v) => updateValue("lsdDecelRear", v)}
+                  frontHighlight={highlights.lsdDecelRear}
+                  onFrontHighlightClear={() => clearHighlight("lsdDecelRear")}
+                  frontTip={tipsByParam.lsdDecelRear?.message}
+                  frontTipSeverity={tipsByParam.lsdDecelRear?.severity}
                 />
               </div>
             )}
             {effectiveDrivetrain === "4WD" && (
-              <StepperRow
+              <ParameterSlider
                 label="Torque"
-                value={values.torqueDistribution ?? 40}
+                frontValue={values.torqueDistribution ?? 40}
                 min={5}
                 max={95}
                 step={5}
                 unit=""
                 disabled={false}
                 formatValue={(v) => `${v}:${100 - v}`}
-                onChange={(v) => updateValue("torqueDistribution", v)}
-                highlight={highlights.torqueDistribution}
-                onHighlightClear={() => clearHighlight("torqueDistribution")}
-                tip={tipsByParam.torqueDistribution?.message}
-                tipSeverity={tipsByParam.torqueDistribution?.severity}
+                onFrontChange={(v) => updateValue("torqueDistribution", v)}
+                frontHighlight={highlights.torqueDistribution}
+                onFrontHighlightClear={() => clearHighlight("torqueDistribution")}
+                frontTip={tipsByParam.torqueDistribution?.message}
+                frontTipSeverity={tipsByParam.torqueDistribution?.severity}
               />
             )}
           </div>
