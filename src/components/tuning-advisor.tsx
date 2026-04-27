@@ -11,6 +11,7 @@ import {
 import { X, Lightbulb } from "lucide-react";
 import {
   getRecommendations,
+  type Recommendation,
   type Symptom,
   type Phase,
   type CornerSpeed,
@@ -45,9 +46,7 @@ const PARAM_LABELS: Record<string, string> = {
 
 interface TuningAdvisorProps {
   drivetrain: Drivetrain;
-  onRecommendations: (
-    highlights: Record<string, "increase" | "decrease">,
-  ) => void;
+  onRecommendations: (recs: Recommendation[]) => void;
   onDismiss: () => void;
 }
 
@@ -61,10 +60,7 @@ export function TuningAdvisor({
   const [speed, setSpeed] = useState<CornerSpeed | null>(null);
   const [throttle, setThrottle] = useState<ThrottleState | null>(null);
   const [elevation, setElevation] = useState<Elevation | null>(null);
-  const [results, setResults] = useState<Record<
-    string,
-    "increase" | "decrease"
-  > | null>(null);
+  const [results, setResults] = useState<Recommendation[] | null>(null);
 
   const handleAdvise = useCallback(() => {
     if (!symptom) return;
@@ -91,7 +87,7 @@ export function TuningAdvisor({
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50">
       {/* Results card */}
-      {results && Object.keys(results).length > 0 && (
+      {results && results.length > 0 && (
         <div className="mx-auto max-w-lg px-4 pb-2">
           <div className="rounded-lg border bg-background shadow-lg p-3">
             <div className="flex items-start justify-between gap-2">
@@ -100,17 +96,17 @@ export function TuningAdvisor({
                   Try adjusting:
                 </p>
                 <div className="flex flex-wrap gap-1">
-                  {Object.entries(results).map(([param, direction]) => (
+                  {results.map(({ parameter, direction, score }) => (
                     <span
-                      key={param}
+                      key={parameter}
                       className={`text-xs px-1.5 py-0.5 rounded font-mono ${
                         direction === "increase"
                           ? "bg-green-500/10 text-green-600"
                           : "bg-red-500/10 text-red-600"
-                      }`}
+                      } ${score === 0 ? "opacity-50" : ""}`}
                     >
                       {direction === "increase" ? "+" : "\u2212"}{" "}
-                      {PARAM_LABELS[param] ?? param}
+                      {PARAM_LABELS[parameter] ?? parameter}
                     </span>
                   ))}
                 </div>
