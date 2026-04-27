@@ -498,8 +498,7 @@ export function TuneEditor({
       lsdInitRear: preset.lsdInitRear ?? prev.lsdInitRear,
       lsdAccelRear: preset.lsdAccelRear ?? prev.lsdAccelRear,
       lsdDecelRear: preset.lsdDecelRear ?? prev.lsdDecelRear,
-      torqueDistribution:
-        preset.torqueDistribution ?? prev.torqueDistribution,
+      torqueDistribution: preset.torqueDistribution ?? prev.torqueDistribution,
     }));
     setHighlights({});
     setBaseTuneLoaded(true);
@@ -782,40 +781,15 @@ export function TuneEditor({
           />
         </ParameterGroup>
 
-        {/* Natural Frequency */}
-        <ParameterGroup
-          title="Springs / Natural Frequency"
-          discrepancyTip={tipsByParam.discrepancy_natFreq?.message}
-          discrepancyTipSeverity={tipsByParam.discrepancy_natFreq?.severity}
-        >
-          <ParameterSlider
-            label=""
-            frontValue={values.natFreqFront ?? 2.0}
-            rearValue={values.natFreqRear ?? 2.0}
-            min={getRange("natFreqFront", "Min")}
-            max={getRange("natFreqFront", "Max")}
-            step={0.01}
-            unit="Hz"
-            disabled={!isAdjustable("natFreqFrontMin")}
-            formatValue={(v) => v.toFixed(2)}
-            onFrontChange={(v) => updateValue("natFreqFront", v)}
-            onRearChange={(v) => updateValue("natFreqRear", v)}
-            frontHighlight={highlights.natFreqFront}
-            rearHighlight={highlights.natFreqRear}
-            onFrontHighlightClear={() => clearHighlight("natFreqFront")}
-            onRearHighlightClear={() => clearHighlight("natFreqRear")}
-            frontTip={tipsByParam.natFreqFront?.message}
-            frontTipSeverity={tipsByParam.natFreqFront?.severity}
-            rearTip={tipsByParam.natFreqRear?.message}
-            rearTipSeverity={tipsByParam.natFreqRear?.severity}
-          />
-        </ParameterGroup>
-
         {/* Anti-Roll Bars */}
         <ParameterGroup
           title="Anti-Roll Bars"
-          discrepancyTip={isHAS ? undefined : tipsByParam.discrepancy_antiRoll?.message}
-          discrepancyTipSeverity={isHAS ? undefined : tipsByParam.discrepancy_antiRoll?.severity}
+          discrepancyTip={
+            isHAS ? undefined : tipsByParam.discrepancy_antiRoll?.message
+          }
+          discrepancyTipSeverity={
+            isHAS ? undefined : tipsByParam.discrepancy_antiRoll?.severity
+          }
         >
           <ParameterSlider
             label=""
@@ -833,9 +807,13 @@ export function TuneEditor({
             onFrontHighlightClear={() => clearHighlight("antiRollFront")}
             onRearHighlightClear={() => clearHighlight("antiRollRear")}
             frontTip={isHAS ? undefined : tipsByParam.antiRollFront?.message}
-            frontTipSeverity={isHAS ? undefined : tipsByParam.antiRollFront?.severity}
+            frontTipSeverity={
+              isHAS ? undefined : tipsByParam.antiRollFront?.severity
+            }
             rearTip={isHAS ? undefined : tipsByParam.antiRollRear?.message}
-            rearTipSeverity={isHAS ? undefined : tipsByParam.antiRollRear?.severity}
+            rearTipSeverity={
+              isHAS ? undefined : tipsByParam.antiRollRear?.severity
+            }
           />
         </ParameterGroup>
 
@@ -895,6 +873,35 @@ export function TuneEditor({
           />
         </ParameterGroup>
 
+        {/* Natural Frequency */}
+        <ParameterGroup
+          title="Springs / Natural Frequency"
+          discrepancyTip={tipsByParam.discrepancy_natFreq?.message}
+          discrepancyTipSeverity={tipsByParam.discrepancy_natFreq?.severity}
+        >
+          <ParameterSlider
+            label=""
+            frontValue={values.natFreqFront ?? 2.0}
+            rearValue={values.natFreqRear ?? 2.0}
+            min={getRange("natFreqFront", "Min")}
+            max={getRange("natFreqFront", "Max")}
+            step={0.01}
+            unit="Hz"
+            disabled={!isAdjustable("natFreqFrontMin")}
+            formatValue={(v) => v.toFixed(2)}
+            onFrontChange={(v) => updateValue("natFreqFront", v)}
+            onRearChange={(v) => updateValue("natFreqRear", v)}
+            frontHighlight={highlights.natFreqFront}
+            rearHighlight={highlights.natFreqRear}
+            onFrontHighlightClear={() => clearHighlight("natFreqFront")}
+            onRearHighlightClear={() => clearHighlight("natFreqRear")}
+            frontTip={tipsByParam.natFreqFront?.message}
+            frontTipSeverity={tipsByParam.natFreqFront?.severity}
+            rearTip={tipsByParam.natFreqRear?.message}
+            rearTipSeverity={tipsByParam.natFreqRear?.severity}
+          />
+        </ParameterGroup>
+
         {/* Camber */}
         <ParameterGroup
           title="Camber Angle"
@@ -943,7 +950,9 @@ export function TuneEditor({
             onFrontHighlightClear={() => clearHighlight("toeFront")}
             onRearHighlightClear={() => clearHighlight("toeRear")}
             frontTip={isHAS ? undefined : tipsByParam.toeFront?.message}
-            frontTipSeverity={isHAS ? undefined : tipsByParam.toeFront?.severity}
+            frontTipSeverity={
+              isHAS ? undefined : tipsByParam.toeFront?.severity
+            }
             rearTip={isHAS ? undefined : tipsByParam.toeRear?.message}
             rearTipSeverity={isHAS ? undefined : tipsByParam.toeRear?.severity}
           />
@@ -952,23 +961,6 @@ export function TuneEditor({
         {/* LSD */}
         <ParameterGroup title="LSD">
           <div className="space-y-3">
-            {effectiveDrivetrain === "4WD" && (
-              <StepperRow
-                label="Torque"
-                value={values.torqueDistribution ?? 40}
-                min={5}
-                max={95}
-                step={5}
-                unit=""
-                disabled={false}
-                formatValue={(v) => `${v}:${100 - v}`}
-                onChange={(v) => updateValue("torqueDistribution", v)}
-                highlight={highlights.torqueDistribution}
-                onHighlightClear={() => clearHighlight("torqueDistribution")}
-                tip={tipsByParam.torqueDistribution?.message}
-                tipSeverity={tipsByParam.torqueDistribution?.severity}
-              />
-            )}
             {!["FR", "MR", "RR"].includes(effectiveDrivetrain) && (
               <div className="space-y-2">
                 <p className="text-xs font-medium text-muted-foreground">
@@ -1072,6 +1064,23 @@ export function TuneEditor({
                   tipSeverity={tipsByParam.lsdDecelRear?.severity}
                 />
               </div>
+            )}
+            {effectiveDrivetrain === "4WD" && (
+              <StepperRow
+                label="Torque"
+                value={values.torqueDistribution ?? 40}
+                min={5}
+                max={95}
+                step={5}
+                unit=""
+                disabled={false}
+                formatValue={(v) => `${v}:${100 - v}`}
+                onChange={(v) => updateValue("torqueDistribution", v)}
+                highlight={highlights.torqueDistribution}
+                onHighlightClear={() => clearHighlight("torqueDistribution")}
+                tip={tipsByParam.torqueDistribution?.message}
+                tipSeverity={tipsByParam.torqueDistribution?.severity}
+              />
             )}
           </div>
         </ParameterGroup>
