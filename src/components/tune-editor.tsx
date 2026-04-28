@@ -675,7 +675,7 @@ export function TuneEditor({
       {/* Load Base Tune */}
       <div className="mb-4">
         <Button
-          variant="outline"
+          variant="secondary"
           className="w-full"
           onClick={loadBaseTune}
           disabled={isBaseTuneActive}
@@ -1082,7 +1082,9 @@ export function TuneEditor({
                 formatValue={(v) => `${v}:${100 - v}`}
                 onFrontChange={(v) => updateValue("torqueDistribution", v)}
                 frontHighlight={highlights.torqueDistribution}
-                onFrontHighlightClear={() => clearHighlight("torqueDistribution")}
+                onFrontHighlightClear={() =>
+                  clearHighlight("torqueDistribution")
+                }
                 frontTip={tipsByParam.torqueDistribution?.message}
                 frontTipSeverity={tipsByParam.torqueDistribution?.severity}
               />
