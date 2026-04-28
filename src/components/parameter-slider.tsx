@@ -139,22 +139,22 @@ function StepperRow({
         {label}
       </span>
       <Button
-        variant="outline"
+        variant="secondary"
         size="icon"
         className={cn(
           "h-9 w-9 shrink-0",
           highlight?.direction === "decrease" &&
-            "border-red-500 bg-red-500/10 text-red-600",
+            "border-red-400 bg-red-500/30 text-red-400 hover:bg-red-500/40",
           highlight?.direction === "decrease" && borderForScore(highlight.score),
         )}
         disabled={disabled || value <= min}
         onClick={decrement}
       >
-        <Minus className="h-3.5 w-3.5" />
+        <Minus className={cn("h-3.5 w-3.5", highlight?.direction === "decrease" && highlight.score > 0 && "stroke-[3]")} />
       </Button>
       <span
         className={cn(
-          "flex-1 text-center text-sm font-mono tabular-nums select-none",
+          "flex-1 text-center text-sm font-mono tabular-nums select-none bg-black/40 rounded px-2 py-1",
           disabled ? "text-muted-foreground" : "cursor-ew-resize",
           tip && tipSeverity && "-mr-10",
         )}
@@ -166,18 +166,18 @@ function StepperRow({
       </span>
       {tip && tipSeverity && <TipIcon tip={tip} severity={tipSeverity} />}
       <Button
-        variant="outline"
+        variant="secondary"
         size="icon"
         className={cn(
           "h-9 w-9 shrink-0",
           highlight?.direction === "increase" &&
-            "border-green-500 bg-green-500/10 text-green-600",
+            "border-green-400 bg-green-500/30 text-green-400 hover:bg-green-500/40",
           highlight?.direction === "increase" && borderForScore(highlight.score),
         )}
         disabled={disabled || value >= max}
         onClick={increment}
       >
-        <Plus className="h-3.5 w-3.5" />
+        <Plus className={cn("h-3.5 w-3.5", highlight?.direction === "increase" && highlight.score > 0 && "stroke-[3]")} />
       </Button>
     </div>
   );

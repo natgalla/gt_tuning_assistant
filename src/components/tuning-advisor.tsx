@@ -44,6 +44,54 @@ const PARAM_LABELS: Record<string, string> = {
   torqueDistribution: "Torque Dist",
 };
 
+/** Group complementary F/R pairs (opposite directions on the same parameter) */
+function groupRecommendations(recs: Recommendation[]) {
+  const groups: (Recommendation | [Recommendation, Recommendation])[] = [];
+  const used = new Set<string>();
+
+  for (const rec of recs) {
+    if (used.has(rec.parameter)) continue;
+
+    const base = rec.parameter.replace(/(Front|Rear)$/, "");
+    const isFR = rec.parameter !== base; // has a Front/Rear suffix
+
+    if (isFR) {
+      const otherParam =
+        base + (rec.parameter.endsWith("Front") ? "Rear" : "Front");
+      const other = recs.find(
+        (r) => r.parameter === otherParam && r.direction !== rec.direction,
+      );
+
+      if (other && !used.has(otherParam)) {
+        used.add(rec.parameter);
+        used.add(otherParam);
+        groups.push([rec, other]);
+        continue;
+      }
+    }
+
+    used.add(rec.parameter);
+    groups.push(rec);
+  }
+
+  return groups;
+}
+
+function RecBadge({ parameter, direction, score }: Recommendation) {
+  return (
+    <span
+      className={`text-xs px-1.5 py-0.5 rounded font-mono ${
+        direction === "increase"
+          ? "bg-green-500/30 text-green-400"
+          : "bg-red-500/30 text-red-400"
+      } ${score === 0 ? "opacity-50" : ""}`}
+    >
+      {direction === "increase" ? "+" : "\u2212"}{" "}
+      {PARAM_LABELS[parameter] ?? parameter}
+    </span>
+  );
+}
+
 interface TuningAdvisorProps {
   drivetrain: Drivetrain;
   onRecommendations: (recs: Recommendation[]) => void;
@@ -64,10 +112,25 @@ export function TuningAdvisor({
 
   const handleAdvise = useCallback(() => {
     if (!symptom) return;
-    const recs = getRecommendations(symptom, phase, speed, throttle, elevation, drivetrain);
+    const recs = getRecommendations(
+      symptom,
+      phase,
+      speed,
+      throttle,
+      elevation,
+      drivetrain,
+    );
     setResults(recs);
     onRecommendations(recs);
-  }, [symptom, phase, speed, throttle, elevation, drivetrain, onRecommendations]);
+  }, [
+    symptom,
+    phase,
+    speed,
+    throttle,
+    elevation,
+    drivetrain,
+    onRecommendations,
+  ]);
 
   const handleDismiss = useCallback(() => {
     setResults(null);
@@ -95,20 +158,23 @@ export function TuningAdvisor({
                 <p className="text-xs font-medium text-muted-foreground mb-1.5">
                   Try adjusting:
                 </p>
-                <div className="flex flex-wrap gap-1">
-                  {results.map(({ parameter, direction, score }) => (
-                    <span
-                      key={parameter}
-                      className={`text-xs px-1.5 py-0.5 rounded font-mono ${
-                        direction === "increase"
-                          ? "bg-green-500/10 text-green-600"
-                          : "bg-red-500/10 text-red-600"
-                      } ${score === 0 ? "opacity-50" : ""}`}
-                    >
-                      {direction === "increase" ? "+" : "\u2212"}{" "}
-                      {PARAM_LABELS[parameter] ?? parameter}
-                    </span>
-                  ))}
+                <div className="flex flex-wrap gap-1 items-center">
+                  {groupRecommendations(results).map((group) =>
+                    Array.isArray(group) ? (
+                      <span
+                        key={group[0].parameter}
+                        className="inline-flex items-center gap-1 border border-border rounded-md p-1"
+                      >
+                        <RecBadge {...group[0]} />
+                        <span className="text-xs text-muted-foreground">
+                          or
+                        </span>
+                        <RecBadge {...group[1]} />
+                      </span>
+                    ) : (
+                      <RecBadge key={group.parameter} {...group} />
+                    ),
+                  )}
                 </div>
               </div>
               <Button

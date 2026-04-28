@@ -72,9 +72,8 @@ export function CarSelector({ value, onSelect }: CarSelectorProps) {
       <div className="relative">
         <Combobox.InputGroup
           className={cn(
-            "flex items-center h-8 w-full rounded-lg border border-input bg-transparent text-base transition-colors md:text-sm",
+            "flex items-center h-8 w-full rounded-lg border border-input bg-black/40 text-base transition-colors md:text-sm",
             "focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50",
-            "dark:bg-input/30",
           )}
         >
           <Combobox.Input
